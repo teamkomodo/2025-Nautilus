@@ -129,20 +129,16 @@ public class DrivetrainSubsystem implements Subsystem {
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
-        AutoBuilder.configure(
-            this::getPose,
-            this::resetPose,
-            this::getChassisSpeeds,
-            this::robotRelativeDrive,
-            new PPHolonomicDriveController(
-                STEER_PID, 
-                DRIVE_PID,
-                Math.sqrt(DRIVETRAIN_WIDTH * DRIVETRAIN_WIDTH + DRIVETRAIN_LENGTH * DRIVETRAIN_LENGTH) / 2
-                ),
-            null,
-            getAlliance(),
-            this
-        );
+        // AutoBuilder.configure(
+        //     this::getPose,
+        //     this::resetPose,
+        //     this::getChassisSpeeds,
+        //     this::robotRelativeDrive,
+        //     HOLONOMIC_PATH_FOLLOWER_CONFIG,
+        //     null,
+        //     getAlliance(),
+        //     this
+        // );
 
         frontLeft = new FalconSwerveModule(
                 FRONT_LEFT_DRIVE_MOTOR_ID,

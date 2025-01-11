@@ -10,7 +10,7 @@ import java.util.function.BooleanSupplier;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 
-import edu.wpi.first.math.controller.HolonomicDriveController;
+//import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -102,7 +102,7 @@ public final class Constants {
     public static final PIDConstants DRIVE_PID = new PIDConstants(5, 0, 0);
     public static final PIDConstants STEER_PID = new PIDConstants(5, 0, 0);
 
-	public static HolonomicDriveController HOLONOMIC_PATH_FOLLOWER_CONFIG = 
+	public static PPHolonomicDriveController HOLONOMIC_PATH_FOLLOWER_CONFIG = 
     new PPHolonomicDriveController(
         DRIVE_PID, // Translation Constants
         STEER_PID, // Steering Constants

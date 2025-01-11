@@ -7,9 +7,11 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SoftLimitConfig;
+import com.revrobotics.spark.
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import edu.wpi.first.math.controller.PIDController;
 
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -32,9 +34,10 @@ public class JointSubsystem extends SubsystemBase {
     private final BooleanPublisher intakedPublisher = jointTable.getBooleanTopic("motorPosition").publish();
     private final BooleanPublisher loadedPublisher = jointTable.getBooleanTopic("motorPosition").publish();
 
-    private final CANSparkMax jointMotor;
-    private final CANSparkMax jointMotor2;
-    private final SparkPIDController jointPidController;
+    private final SparkMax jointMotor;
+    private final SparkMax jointMotor2;
+    private final PIDController jointPidController;
+    // private final SparkClosedLoopController jointPIDController;
     private final RelativeEncoder jointEncoder;
     private final DigitalInput jointLimitSwitch;
 
@@ -46,7 +49,10 @@ public class JointSubsystem extends SubsystemBase {
     private double jointMotorPosition = 0;
   
     public JointSubsystem() {
-        jointMotor = new CANSparkMax(JOINT_MOTOR_1_ID, MotorType.kBrushless);
+
+        //Joint Motor
+        jointMotor = new SparkMax(JOINT_MOTOR_1_ID, MotorType.kBrushless);
+
         jointMotor.setSmartCurrentLimit(50);
         jointMotor.setInverted(true);
 
@@ -55,7 +61,11 @@ public class JointSubsystem extends SubsystemBase {
         jointMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
         jointMotor.enableSoftLimit(SoftLimitDirection.kForward, true);
 
-        jointMotor2 = new CANSparkMax(JOINT_MOTOR_2_ID, MotorType.kBrushless);
+
+
+
+        //Joint Motor 2
+        jointMotor2 = new SparkMax(JOINT_MOTOR_2_ID, MotorType.kBrushless);
         jointMotor2.setSmartCurrentLimit(50);
         jointMotor2.setInverted(true);
         jointMotor2.follow(jointMotor, true);

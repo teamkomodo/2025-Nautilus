@@ -4,22 +4,22 @@
 
 package frc.robot;
 
-import frc.robot.commands.PreloadCommand;
-import frc.robot.commands.ShootCommand;
-import frc.robot.commands.ShootIntakeCommand;
-import frc.robot.commands.ShootStopCommand;
-import frc.robot.commands.StopIntakeCommand;
+//import frc.robot.commands.PreloadCommand;
+//import frc.robot.commands.ShootCommand;
+//import frc.robot.commands.ShootIntakeCommand;
+//import frc.robot.commands.ShootStopCommand;
+//import frc.robot.commands.StopIntakeCommand;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.JointSubsystem;
+//import frc.robot.subsystems.IntakeSubsystem;
+//import frc.robot.subsystems.JointSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
+//import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.util.BlinkinPattern;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.PathPlannerPath;
+// import com.pathplanner.lib.auto.NamedCommands;
+// import com.pathplanner.lib.path.PathPlannerPath;
 
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+// import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,8 +31,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.*;
 
-import java.lang.module.FindException;
-import java.util.Map;
+
 
 public class RobotContainer {  
     private final Field2d field2d = new Field2d();
@@ -43,11 +42,11 @@ public class RobotContainer {
     private final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     private final CommandXboxController operatorController = new CommandXboxController(OPERATOR_XBOX_PORT);
 
-    //private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem();
+    
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
-    private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    private final JointSubsystem jointSubsystem = new JointSubsystem();
+    // private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+    // private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    // private final JointSubsystem jointSubsystem = new JointSubsystem();
     private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
     public RobotContainer() {
@@ -60,27 +59,27 @@ public class RobotContainer {
     
     private void configureBindings() {
 
-        Trigger xButtonOperator = operatorController.x();
-        Trigger yButtonOperator = operatorController.y();
-        Trigger aButtonOperator = operatorController.a();
-        Trigger bButtonOperator = operatorController.b();
+        // Trigger xButtonOperator = operatorController.x();
+        // Trigger yButtonOperator = operatorController.y();
+        // Trigger aButtonOperator = operatorController.a();
+        // Trigger bButtonOperator = operatorController.b();
         
-        Trigger rightJoystickOperator = operatorController.rightStick();
-        Trigger leftJoystickOperator = operatorController.leftStick();
+        // Trigger rightJoystickOperator = operatorController.rightStick();
+        // Trigger leftJoystickOperator = operatorController.leftStick();
 
-        Trigger rightTriggerOperator = operatorController.rightTrigger();
-        Trigger leftTriggerOperator = operatorController.leftTrigger();
-        Trigger rightBumperOperator = operatorController.rightBumper();
-        Trigger leftBumperOperator = operatorController.rightBumper();
+        // Trigger rightTriggerOperator = operatorController.rightTrigger();
+        // Trigger leftTriggerOperator = operatorController.leftTrigger();
+        // Trigger rightBumperOperator = operatorController.rightBumper();
+        // Trigger leftBumperOperator = operatorController.rightBumper();
         
         //functionality
-        rightTriggerOperator.onTrue(shooterSubsystem.rampUpShooter());
-        leftTriggerOperator.onTrue(shooterSubsystem.stopShooter());
+        // rightTriggerOperator.onTrue(shooterSubsystem.rampUpShooter());
+        // leftTriggerOperator.onTrue(shooterSubsystem.stopShooter());
 
-        yButtonOperator.whileTrue(intakeSubsystem.intake());
+        // yButtonOperator.whileTrue(intakeSubsystem.intake());
         
-        aButtonOperator.onTrue(new ShootCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
-        bButtonOperator.onTrue(intakeSubsystem.eject());
+        // aButtonOperator.onTrue(new ShootCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
+        // bButtonOperator.onTrue(intakeSubsystem.eject());
 
         //drivetrain
 		Trigger leftBumperDriver = driverController.leftBumper();
@@ -102,8 +101,8 @@ public class RobotContainer {
     public void teleopInit() {
         Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();});
         Commands.runOnce(() -> ledSubsystem.setFramePatternCommand(BlinkinPattern.COLOR_1_AND_2_PATTERN_SPARKLE_COLOR_2_ON_COLOR_1));
-        Commands.runOnce(() -> intakeSubsystem.noteLoaded = true);
-        Commands.runOnce(() -> intakeSubsystem.noteIntaked = true);
+        // Commands.runOnce(() -> intakeSubsystem.noteLoaded = true);
+        // Commands.runOnce(() -> intakeSubsystem.noteIntaked = true);
     }
     
     public Command getAutonomousCommand() {
@@ -111,9 +110,9 @@ public class RobotContainer {
     }
 
     private void registerNamedCommands() {
-        NamedCommands.registerCommand("ready", new PreloadCommand(intakeSubsystem, shooterSubsystem, jointSubsystem, drivetrainSubsystem));
-        NamedCommands.registerCommand("stopIntake", new StopIntakeCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
-        NamedCommands.registerCommand("shootAndIntake", new ShootIntakeCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
-        NamedCommands.registerCommand("shootAndStop", new ShootStopCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
+        // NamedCommands.registerCommand("ready", new PreloadCommand(intakeSubsystem, shooterSubsystem, jointSubsystem, drivetrainSubsystem));
+        // NamedCommands.registerCommand("stopIntake", new StopIntakeCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
+        // NamedCommands.registerCommand("shootAndIntake", new ShootIntakeCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
+        // NamedCommands.registerCommand("shootAndStop", new ShootStopCommand(intakeSubsystem, shooterSubsystem, jointSubsystem));
     }
 }

@@ -7,10 +7,10 @@ package frc.robot;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.ReplanningConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.config.PIDConstants;
 
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -99,12 +99,14 @@ public final class Constants {
 	public static final double FALCON_500_NOMINAL_VOLTAGE = 12.0;
 	public static final double TALON_FX_TICKS_PER_ROTATION = 2048.0;
 
-	public static HolonomicPathFollowerConfig holonomicPathFollowerConfig = new HolonomicPathFollowerConfig(
-			new PIDConstants(5.0, 0.0, 0.0), // Translation Constants
-			new PIDConstants(5.0, 0.0, 0.0), // Steering Constants
-			MAX_MODULE_VELOCITY,
-			Math.sqrt(DRIVETRAIN_WIDTH * DRIVETRAIN_WIDTH + DRIVETRAIN_LENGTH * DRIVETRAIN_LENGTH) / 2,
-			new ReplanningConfig(false, false)
+    public static final PIDConstants DRIVE_PID = new PIDConstants(5, 0, 0);
+    public static final PIDConstants STEER_PID = new PIDConstants(5, 0, 0);
+
+	public static HolonomicDriveController HOLONOMIC_PATH_FOLLOWER_CONFIG = 
+    new PPHolonomicDriveController(
+        DRIVE_PID, // Translation Constants
+        STEER_PID, // Steering Constants
+        Math.sqrt(DRIVETRAIN_WIDTH * DRIVETRAIN_WIDTH + DRIVETRAIN_LENGTH * DRIVETRAIN_LENGTH) / 2
 	);
 
     public static final BooleanSupplier ON_RED_ALLIANCE = () -> {

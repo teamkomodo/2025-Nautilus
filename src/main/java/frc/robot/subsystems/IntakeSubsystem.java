@@ -10,11 +10,12 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.util.PIDGains;
 import frc.robot.util.Util;
 
-import com.revrobotics.SparkPIDController;
-import com.revrobotics.CANSparkBase.ControlType;
-import com.revrobotics.CANSparkMax;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -34,50 +35,39 @@ public class IntakeSubsystem extends SubsystemBase {
     private final BooleanPublisher pieceIntakedSensorPublisher = NetworkTableInstance.getDefault().getTable("intake").getBooleanTopic("pieceIntakedSensor").publish();
     private final BooleanPublisher pieceLoadedSensorPublisher = NetworkTableInstance.getDefault().getTable("intake").getBooleanTopic("pieceInShooterSensor").publish();
 
-    private final CANSparkMax intakeMotor;
-    private final CANSparkMax intakeMotor2;
+    private final SparkMax intakeMotor;
+    private final SparkMaxConfig intakeConfig;
+    private final SparkMax intakeMotor2;
+    private final SparkMaxConfig intakeConfig2;
+    
     private final RelativeEncoder intakeEncoder;
-    private final SparkPIDController intakePidController;
+    private final SparkClosedLoopController intakeController;
 
     public final DigitalInput noteIntakedSensor;
     public final DigitalInput noteLoadedSensor;
 
     public String currentCommand = "idle";
 
-    private PIDGains pid = new PIDGains(1, 0, 0, 1, 0, 0, -1, 1);
-    
-    // public final SysIdRoutine intakeRoutine = new SysIdRoutine(
-    //         new SysIdRoutine.Config(), 
-    //         new SysIdRoutine.Mechanism(
-    //         (voltage) -> setIntakeVelocity(voltage.in(Units.Volts)),
-    //         null,
-    //         this
-    // ));
-
     private double filteredCurrent = 0;
     private double currentFilterConstant = 0.1;
-    private double intakeDutyCycle;
 
     public boolean noteIntaked;
     public boolean noteLoaded;
     
     public IntakeSubsystem() {
-        intakeMotor = new CANSparkMax(INTAKE_MOTOR_1_ID, MotorType.kBrushless); //FIXME: find motor id
-        intakeMotor.setSmartCurrentLimit(80);
-        intakeMotor.setInverted(true);
-
-        intakeMotor2 = new CANSparkMax(INTAKE_MOTOR_2_ID, MotorType.kBrushless); //FIXME: find motor id
-        intakeMotor2.setInverted(false);
-        intakeMotor2.follow(intakeMotor, true);
+        intakeMotor = new SparkMax(INTAKE_MOTOR_1_ID, MotorType.kBrushless); //FIXME: find motor id
+        intakeConfig = new SparkMaxConfig();
+        intakeMotor2 = new SparkMax(INTAKE_MOTOR_2_ID, MotorType.kBrushless); //FIXME: find motor id
+        intakeConfig2 = new SparkMaxConfig();
 
         noteIntakedSensor = new DigitalInput(1); //FIXME: find port number
         noteLoadedSensor = new DigitalInput(2); //FIXME: find port number
         intakeEncoder = intakeMotor.getEncoder();
         intakeEncoder.setPosition(0);
 
-        intakePidController = intakeMotor.getPIDController();
-        Util.setPidController(intakePidController, pid);
+        intakeController = intakeMotor.getClosedLoopController();
 
+        configMotors();
     }
 
     public void teleopInit() {
@@ -130,11 +120,11 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setIntakeVelocity(double velocity) {
-         setMotor(velocity, ControlType.kVelocity);
+         intakeController.setReference(velocity, ControlType.kVelocity);
     }
     
     public void setIntakeDutyCycle(double dutyCycle) {
-        intakePidController.setReference(dutyCycle, ControlType.kDutyCycle);
+        intakeController.setReference(dutyCycle, ControlType.kDutyCycle);
     }
 
     public Command intake() {
@@ -163,13 +153,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void holdIntake() {
         currentCommand = "idle";
-        setMotor(intakeEncoder.getPosition(), ControlType.kPosition);
-    }
-
-    private void setMotor(double value, ControlType type) {
-        if (type == ControlType.kDutyCycle)
-            intakeDutyCycle = value;
-        intakePidController.setReference(value, type);
+        intakeController.setReference(intakeEncoder.getPosition(), ControlType.kPosition);
     }
 
     public boolean getNoteDetection(DigitalInput beamBreak) {
@@ -190,5 +174,21 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public double getFilteredCurrent() {
         return filteredCurrent;
+    }
+
+    public void configMotors() {
+
+        intakeConfig
+        .inverted(true)
+        .smartCurrentLimit(80);
+        
+        intakeConfig.closedLoop
+        .pid(0, 1, 1);
+
+        intakeConfig2
+        .inverted(false)
+        .smartCurrentLimit(80)
+        .follow(INTAKE_MOTOR_1_ID, true);
+
     }
 }

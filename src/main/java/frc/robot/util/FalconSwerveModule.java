@@ -8,7 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -28,6 +28,8 @@ public class FalconSwerveModule implements SwerveModule{
 
     private static final double steerPositionConversionFactor = 2 * Math.PI * STEER_REDUCTION; // motor rotations -> module rotation in radians
     
+    public double AbsoluteSensorDiscontinuityPoint = 0.5;
+
     // Telemetry
     private final DoublePublisher velocityErrorPublisher;
     private final DoublePublisher rotationErrorPublisher;
@@ -62,7 +64,7 @@ public class FalconSwerveModule implements SwerveModule{
 
         steerAbsoluteEncoder.getConfigurator().apply(new MagnetSensorConfigs()
             .withMagnetOffset(steerOffset / (2 * Math.PI))
-            .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Signed_PlusMinusHalf)); // CANCoder outputs between (-0.5, 0.5)
+            .withAbsoluteSensorDiscontinuityPoint(AbsoluteSensorDiscontinuityPoint)); // CANCoder outputs between (-0.5, 0.5)
 
         configureMotors();
 

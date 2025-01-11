@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.units.measure.Units;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -41,6 +41,7 @@ import java.util.function.DoubleSupplier;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
@@ -128,20 +129,18 @@ public class DrivetrainSubsystem implements Subsystem {
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
-        AutoBuilder.configureHolonomic(
+        AutoBuilder.configure(
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
             this::robotRelativeDrive,
-            holonomicPathFollowerConfig,
-            () -> {
-                Optional<Alliance> alliance = DriverStation.getAlliance();
-                if(alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red;
-                }
-                return false;
-
-            },
+            new PPHolonomicDriveController(
+                STEER_PID, 
+                DRIVE_PID,
+                Math.sqrt(DRIVETRAIN_WIDTH * DRIVETRAIN_WIDTH + DRIVETRAIN_LENGTH * DRIVETRAIN_LENGTH) / 2
+                ),
+            null,
+            getAlliance(),
             this
         );
 
@@ -418,15 +417,6 @@ public class DrivetrainSubsystem implements Subsystem {
         }, this);
     }
 
-    public Command alignToTrap() {
-        return AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("Align_Red_Amp"), new PathConstraints(
-            1,
-            10,
-            Math.PI,
-            4 * Math.PI
-        ));
-    }
-
 
     public Command driveSysIdRoutineCommand(){
         return Commands.sequence(
@@ -470,7 +460,13 @@ public class DrivetrainSubsystem implements Subsystem {
         backRight.runRotation(voltage);
     }
 
-
+    public boolean getAlliance() {
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+                if(alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                }
+                return false;
+    }
 
 
 

@@ -31,34 +31,6 @@ public final class Constants {
     public static final int DRIVER_XBOX_PORT = 0;
     public static final int OPERATOR_XBOX_PORT = 1;
 
-    // Shooter
-    // //Shooter
-    public static final int SHOOTER_MOTOR_1_ID = 25;
-    public static final int SHOOTER_MOTOR_2_ID = 26;
-
-    //Intake
-    public static final int INTAKE_MOTOR_1_ID = 21; // FIXME: need proper defenition
-    public static final int INTAKE_MOTOR_2_ID = 22; // FIXME: need proper defenition
-    public static final int INTAKE_BEAM_BREAK_PORT = 2; // FIXME: need proper defenition
-    public static final int SHOOTER_BEAM_BREAK_PORT = 1; // FIXME: need proper defenition
-    public static final double INTAKE_SPEED = -0.5;
-
-    // Joint
-    public static final int JOINT_MOTOR_1_ID = 23; // FIXME: Change motor ID
-    public static final int JOINT_MOTOR_2_ID = 24; // FIXME: Change motor ID
-    public static final int JOINT_ZERO_SWITCH_CHANNEL = 0;
-
-    public static final double JOINT_STOW_POSITION = 0.0;
-    public static final double JOINT_SHOOTING_POSITION = 9.367;
-    public static final double JOINT_MIN_POSITION = 0.0;
-    public static final double JOINT_MAX_POSITION = 9.367;
-
-    // Constants
-
-    // rpm
-    public static final double SPEAKER_SPEED = 3000;
-    public static final double SPIN_RATIO = 0.3;
-
 	public static final boolean FIELD_RELATIVE_DRIVE = true;
 	public static final double LINEAR_SLOW_MODE_MODIFIER = 0.5;
 	public static final double ANGULAR_SLOW_MODE_MODIFIER = 0.2;
@@ -121,14 +93,5 @@ public final class Constants {
     public static final double FIELD_WIDTH = 8.21; // m approxiamation: Field Length is 26ft. 11 1/8 in wide
     public static final double FIELD_LENGTH = 16.54;
 
-    public static final int A_FRAME_LED_CHANNEL = 0;
-    public static final int TURBOTAKE_LED_CHANNEL = 1;
-
-
-
-
-
-    
-
-
+    public static final int LED_CHANNEL = 0;
 }

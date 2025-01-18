@@ -110,12 +110,12 @@ public final class Constants {
 	);
 
     public static final BooleanSupplier ON_RED_ALLIANCE = () -> {
-                Optional<Alliance> alliance = DriverStation.getAlliance();
-                if(alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red;
-                }
-                return false;
-            };
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        if(alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
+            return true;
+        }
+        return false;
+    };
 
     // FRC Field
     public static final double FIELD_WIDTH = 8.21; // m approxiamation: Field Length is 26ft. 11 1/8 in wide

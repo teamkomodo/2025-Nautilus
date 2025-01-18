@@ -87,11 +87,12 @@ public class FalconSwerveModule implements SwerveModule{
 
     private void configureMotors() {
 
-        driveConfig.withInverted(InvertedValue.CounterClockwise_Positive);
-        driveMotor.setControl(driveConfig);
+        driveConfig.withInverted(InvertedValue.Clockwise_Positive);
+        driveMotor.getConfigurator().apply(driveConfig);
         driveMotor.setNeutralMode(NeutralModeValue.Brake); // motor brakes when idle
 
-        steerConfig.withInverted(InvertedValue.CounterClockwise_Positive);
+        steerConfig.withInverted(InvertedValue.Clockwise_Positive);
+        steerMotor.getConfigurator().apply(steerConfig);
         steerMotor.setNeutralMode(NeutralModeValue.Brake);
 
         steerMotor.setPosition(-getAbsoluteModuleRotation().getRadians() / steerPositionConversionFactor); // negative becuase relative encoder is reversed
@@ -112,9 +113,9 @@ public class FalconSwerveModule implements SwerveModule{
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
-        SwerveModuleState optimizedState = desiredState;
         //SwerveModuleState optimizedState = desiredState;
-        //optimizedState.optimize(getModuleRotation()); // Doesn't matter if supplied rotation is upwrapped (I think)
+        SwerveModuleState optimizedState = desiredState;
+        optimizedState.optimize(getModuleRotation()); // Doesn't matter if supplied rotation is upwrapped (I think)
 
         final double driveOutput = driveController.calculate(getDriveVelocity(), optimizedState.speedMetersPerSecond);
         final double driveFeedforward = this.driveFeedforward.calculate(optimizedState.speedMetersPerSecond);

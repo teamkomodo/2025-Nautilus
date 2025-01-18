@@ -99,8 +99,6 @@ public class DrivetrainSubsystem implements Subsystem {
         )
     );
 
-     
-
     private final Translation2d frontLeftPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D); // All translations are relative to center of rotation
     private final Translation2d frontRightPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
     private final Translation2d backLeftPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D);
@@ -130,16 +128,16 @@ public class DrivetrainSubsystem implements Subsystem {
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
-        AutoBuilder.configure(
-            this::getPose,
-            this::resetPose,
-            this::getChassisSpeeds,
-            this::robotRelativeDrive,
-            HOLONOMIC_PATH_FOLLOWER_CONFIG,
-            null,
-            getAlliance(),
-            this
-        );
+        // AutoBuilder.configure(
+        //     this::getPose,
+        //     this::resetPose,
+        //     this::getChassisSpeeds,
+        //     this::robotRelativeDrive,
+        //     HOLONOMIC_PATH_FOLLOWER_CONFIG,
+        //     null,
+        //     ON_RED_ALLIANCE,
+        //     this
+        // );
 
         frontLeft = new FalconSwerveModule(
                 FRONT_LEFT_DRIVE_MOTOR_ID,
@@ -169,7 +167,6 @@ public class DrivetrainSubsystem implements Subsystem {
                 BACK_RIGHT_STEER_OFFSET,
                 drivetrainNT.getSubTable("backright"));
 
-        tab.add("Test Drivetrain", testDrivetrain());
         tab.addNumber("Rotation", () -> (getAdjustedRotation().getDegrees()));
 
         poseEstimator = new SwerveDrivePoseEstimator(
@@ -321,80 +318,6 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
     // Commands
-    public Command testDrivetrain() {
-        return Commands.sequence(
-            Commands.run(() -> {
-                setModuleStates(new SwerveModuleState[] {
-                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),
-                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),
-                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),
-                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0))
-                });
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                setModuleStates(new SwerveModuleState[] {
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0))
-                });
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                setModuleStates(new SwerveModuleState[] {
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90))
-                });
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                setModuleStates(new SwerveModuleState[] {
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180))
-                });
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                setModuleStates(new SwerveModuleState[] {
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90)),
-                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90))
-                });
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                setModuleStates(new SwerveModuleState[] {
-                    new SwerveModuleState(0, Rotation2d.fromDegrees(360)),
-                    new SwerveModuleState(0, Rotation2d.fromDegrees(360)),
-                    new SwerveModuleState(0, Rotation2d.fromDegrees(360)),
-                    new SwerveModuleState(0, Rotation2d.fromDegrees(360))
-                });
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(0, 0.0, 0, false);
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(1.0, 0.0, 0, false);
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(-1.0, 0.0, 0, false);
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(0.0, 1.0, 0, false);
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(0.0, -1.0, 0, false);
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(0.0, 0.0, 1.0, false);
-            }, this).withTimeout(1),
-            Commands.run(() -> {
-                drive(0.0, 0.0, -1.0, false);
-            }, this).withTimeout(1)
-        );
-    }
-
     public Command enableSlowModeCommand() {
         return Commands.runOnce(() -> { slowMode = true; });
     }
@@ -413,7 +336,6 @@ public class DrivetrainSubsystem implements Subsystem {
 
         }, this);
     }
-
 
     public Command driveSysIdRoutineCommand(){
         return Commands.sequence(
@@ -453,13 +375,5 @@ public class DrivetrainSubsystem implements Subsystem {
         frontRight.runRotation(voltage);
         backLeft.runRotation(voltage);
         backRight.runRotation(voltage);
-    }
-
-    public boolean getAlliance() {
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-                if(alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red;
-                }
-                return false;
     }
 }

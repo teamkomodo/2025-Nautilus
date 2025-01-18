@@ -53,8 +53,8 @@ public class RobotContainer {
         configureBindings();
         registerNamedCommands();
 
-        autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        autoChooser = null;//AutoBuilder.buildAutoChooser();
+        //SmartDashboard.putData("Auto Chooser", autoChooser);
     }    
     
     private void configureBindings() {
@@ -84,16 +84,12 @@ public class RobotContainer {
         //drivetrain
 		Trigger leftBumperDriver = driverController.leftBumper();
 		leftBumperDriver.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
-        
 
-        driverController.a().whileTrue(drivetrainSubsystem.driveSysIdRoutineCommand());
-        driverController.b().whileTrue(drivetrainSubsystem.steerSysIdRoutineCommand());
 		// deadbands are applied in command
 		drivetrainSubsystem.setDefaultCommand(drivetrainSubsystem.joystickDriveCommand(
 				() -> -driverController.getLeftY(), // -Y (up) on joystick is +X (forward) on robot
 				() -> -driverController.getLeftX(), // -X (left) on joystick is +Y (left) on robot
-				() ->
-                driverController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
+				() -> -driverController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
 		));
 
     }

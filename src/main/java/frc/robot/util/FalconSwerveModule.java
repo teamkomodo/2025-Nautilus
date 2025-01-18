@@ -6,9 +6,10 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.PositionVoltage;
-
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -44,7 +45,9 @@ public class FalconSwerveModule implements SwerveModule{
     private final double steerD = 0;
 
     private final TalonFX driveMotor;
+    private final MotorOutputConfigs driveConfig;
     private final TalonFX steerMotor;
+    private final MotorOutputConfigs steerConfig;
     private final CANcoder steerAbsoluteEncoder;
 
     private final PIDController driveController = new PIDController(driveP, driveI, driveD);
@@ -58,7 +61,9 @@ public class FalconSwerveModule implements SwerveModule{
 
     public FalconSwerveModule(int driveMotorId, int steerMotorId, int steerAbsoluteEncoderId, double steerOffset, NetworkTable moduleNT) {
         this.driveMotor = new TalonFX(driveMotorId);
+        driveConfig = new MotorOutputConfigs();
         this.steerMotor = new TalonFX(steerMotorId);
+        steerConfig = new MotorOutputConfigs();
         this.steerAbsoluteEncoder = new CANcoder(steerAbsoluteEncoderId);
         this.desiredState = new SwerveModuleState(0.0, Rotation2d.fromRadians(0));
 
@@ -82,10 +87,11 @@ public class FalconSwerveModule implements SwerveModule{
 
     private void configureMotors() {
 
-        driveMotor.setInverted(true); // invert the motor
+        driveConfig.withInverted(InvertedValue.CounterClockwise_Positive);
+        driveMotor.setControl(driveConfig);
         driveMotor.setNeutralMode(NeutralModeValue.Brake); // motor brakes when idle
 
-        steerMotor.setInverted(true);
+        steerConfig.withInverted(InvertedValue.CounterClockwise_Positive);
         steerMotor.setNeutralMode(NeutralModeValue.Brake);
 
         steerMotor.setPosition(-getAbsoluteModuleRotation().getRadians() / steerPositionConversionFactor); // negative becuase relative encoder is reversed
@@ -106,14 +112,16 @@ public class FalconSwerveModule implements SwerveModule{
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
-        SwerveModuleState optimizedState = SwerveModuleState.optimize(desiredState, getModuleRotation()); // Doesn't matter if supplied rotation is upwrapped (I think)
+        SwerveModuleState optimizedState = desiredState;
+        //SwerveModuleState optimizedState = desiredState;
+        //optimizedState.optimize(getModuleRotation()); // Doesn't matter if supplied rotation is upwrapped (I think)
 
         final double driveOutput = driveController.calculate(getDriveVelocity(), optimizedState.speedMetersPerSecond);
         final double driveFeedforward = this.driveFeedforward.calculate(optimizedState.speedMetersPerSecond);
         
         driveMotor.setVoltage((driveOutput + driveFeedforward));
 
-        // angle from kinematics is wrapped, we need to convert it to closest equivalent angle to current module rotation
+        //angle from kinematics is wrapped, we need to convert it to closest equivalent angle to current module rotation
         double minInputAngle = getModuleRotation().getRadians() - Math.PI;
         double maxInputAngle = getModuleRotation().getRadians() + Math.PI;
         double inputAngle = MathUtil.inputModulus(optimizedState.angle.getRadians(), minInputAngle, maxInputAngle);
@@ -122,7 +130,7 @@ public class FalconSwerveModule implements SwerveModule{
         this.desiredState = optimizedState;
     }
 
-    @SuppressWarnings(value = { "unused" })
+    @SuppressWarnings(value = {"unused"})
     private void correctRelativeEncoder() {
         double delta = getAbsoluteModuleRotation().getRadians()-getModuleRotation().getRadians();
         if(delta > Math.PI)
@@ -156,13 +164,11 @@ public class FalconSwerveModule implements SwerveModule{
         return driveMotor.getVelocity().getValueAsDouble() * driveVelocityConversionFactor;
     }
 
-
     public void runForward(double voltage){
         driveMotor.setVoltage(voltage);
         //idk if this is the same as set ref in crecendo code
         steerMotor.set(0);
     }
-
 
     public void runRotation(double voltage){
         driveMotor.set(0);

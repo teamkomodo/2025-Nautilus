@@ -44,6 +44,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.DriveFeedforwards;
 
 public class DrivetrainSubsystem implements Subsystem {
 
@@ -129,16 +130,16 @@ public class DrivetrainSubsystem implements Subsystem {
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
-        // AutoBuilder.configure(
-        //     this::getPose,
-        //     this::resetPose,
-        //     this::getChassisSpeeds,
-        //     this::robotRelativeDrive,
-        //     HOLONOMIC_PATH_FOLLOWER_CONFIG,
-        //     null,
-        //     getAlliance(),
-        //     this
-        // );
+        AutoBuilder.configure(
+            this::getPose,
+            this::resetPose,
+            this::getChassisSpeeds,
+            this::robotRelativeDrive,
+            HOLONOMIC_PATH_FOLLOWER_CONFIG,
+            null,
+            getAlliance(),
+            this
+        );
 
         frontLeft = new FalconSwerveModule(
                 FRONT_LEFT_DRIVE_MOTOR_ID,
@@ -237,7 +238,7 @@ public class DrivetrainSubsystem implements Subsystem {
         poseEstimator.addVisionMeasurement(visionPose, measurementTime);
     }
 
-    public void robotRelativeDrive(ChassisSpeeds chassisSpeeds) {
+    public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
         drive(chassisSpeeds, false);
     }
 
@@ -439,8 +440,6 @@ public class DrivetrainSubsystem implements Subsystem {
             Commands.waitSeconds(2)
         );
     }
-
-
 
     public void runDriveVolts(double voltage){
         frontLeft.runForward(voltage);

@@ -17,6 +17,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
@@ -31,7 +32,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.LimelightHelpers;
 import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -47,6 +47,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
+import frc.robot.LimelightHelpers;
 
 public class DrivetrainSubsystem implements Subsystem {
 
@@ -55,9 +56,13 @@ public class DrivetrainSubsystem implements Subsystem {
     private static boolean useVision = true;
 
     private final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry tx = limelightNT.getEntry("tx");
+
     private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
+    
     private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
 
+    
     // Telemetry
 
     private final StructArrayPublisher<SwerveModuleState> measuredSwerveStatesPublisher = drivetrainNT.getStructArrayTopic(
@@ -219,7 +224,9 @@ public class DrivetrainSubsystem implements Subsystem {
         
         updateTelemetry();
 
+        double x = tx.getDouble(0.0);
 
+        System.out.println(x);
         
     }
 

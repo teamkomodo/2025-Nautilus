@@ -29,7 +29,9 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.LimelightHelpers;
 import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -123,6 +125,30 @@ public class DrivetrainSubsystem implements Subsystem {
     private boolean slowMode = false;
     private double rotationOffsetRadians = 0.0;
 
+
+
+    double limelight_aim_prop(){
+        //double aimP = 1;
+
+        double targetingAngularVelocity = LimelightHelpers.getTX("komodo");
+
+      //  targetingAngularVelocity *= MAX_ANGULAR_VELOCITY;
+
+        //targetingAngularVelocity *= -1.0;
+
+        return targetingAngularVelocity;
+    }
+
+    
+
+    double limelight_range_prop(){
+        double rangeP = .1;
+        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") *rangeP;
+        targetingForwardSpeed *= MAX_MODULE_VELOCITY;
+        //targetingForwardSpeed *= -1.0;
+        return targetingForwardSpeed;
+    }
+
     public DrivetrainSubsystem(Field2d field) {
         this.field = field;
 
@@ -192,6 +218,9 @@ public class DrivetrainSubsystem implements Subsystem {
             visionPosePeriodic();
         
         updateTelemetry();
+
+
+        
     }
 
     private void updateTelemetry() {
@@ -238,6 +267,10 @@ public class DrivetrainSubsystem implements Subsystem {
     public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
         drive(chassisSpeeds, false);
     }
+
+
+
+
 
     public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative) {
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, angularVelocity);
@@ -361,6 +394,21 @@ public class DrivetrainSubsystem implements Subsystem {
             steerSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(2),
             Commands.waitSeconds(2)
         );
+    }
+
+
+
+    public Command aimAndRangeCommand(){
+        final var rot_limelight = limelight_aim_prop();
+        final var forward_limelight = limelight_range_prop();
+
+        return Commands.run(
+    () -> {/*drive(0, 0, rot_limelight, false);*/System.out.println("Ran the aim thingy: " + rot_limelight);}, 
+            this
+            );    
+            
+            
+        
     }
 
     public void runDriveVolts(double voltage){

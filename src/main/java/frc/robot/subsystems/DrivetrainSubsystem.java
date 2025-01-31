@@ -180,6 +180,15 @@ public class DrivetrainSubsystem implements Subsystem {
         //     this
         // );
 
+
+
+        //only tracks specific apriltags depending on alliance
+        if(ON_RED_ALLIANCE.getAsBoolean() == false){
+            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{22,21,20,19,18,17,16,13,12});
+        } else{
+            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{11,10,9,8,7,6,3,2,1});
+        }
+
         frontLeft = new FalconSwerveModule(
                 FRONT_LEFT_DRIVE_MOTOR_ID,
                 FRONT_LEFT_STEER_MOTOR_ID,

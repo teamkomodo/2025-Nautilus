@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-//import org.photonvision.PhotonCamera;
 import static frc.robot.Constants.*;
 
 
@@ -24,12 +23,11 @@ public class RobotContainer {
 
     //Inputs Devices
     private final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
-    // private PhotonCamera camera;
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
     private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
-    //private final double VISION_TURN_kP = 0.01;
+    
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
@@ -54,21 +52,6 @@ public class RobotContainer {
 
 
 
-    //     boolean targetVisible = false;
-    // double targetYaw = 0.0;
-    // var results = camera.getAllUnreadResults();
-    // if(!results.isEmpty()){
-    //   var result = results.get(results.size() - 1);
-    //   if(result.hasTargets()){
-    //     for (var target : result.getTargets()){
-    //       targetYaw = target.getYaw();
-    //       targetVisible = true;
-    //     }
-    //   }
-    // }
-    // double turn = -1.0 * targetYaw * VISION_TURN_kP * MAX_ANGULAR_VELOCITY;
-
-    // System.out.println(turn);
 
     }
 

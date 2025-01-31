@@ -21,6 +21,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.SPI;
@@ -38,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static frc.robot.Constants.*;
 
+import java.time.Period;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
@@ -47,21 +49,49 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
+import com.revrobotics.spark.SparkLowLevel.PeriodicFrame;
+
 import frc.robot.LimelightHelpers;
 
 public class DrivetrainSubsystem implements Subsystem {
 
+    Counter counter = new Counter(Counter.Mode.kPulseLength);
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
 
     private static boolean useVision = true;
 
-    private final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry tx = limelightNT.getEntry("tx");
+   private final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
+   // NetworkTableEntry tx = limelightNT.getEntry("tx");
 
-    private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
+   // private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
     
-    private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
+  //  private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
 
+    
+  
+    
+
+    double limelight_range_prop(){
+        double rangeP = .04;
+        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * rangeP;
+        targetingForwardSpeed *= MAX_MODULE_VELOCITY;
+        targetingForwardSpeed *= -1.0;
+        return targetingForwardSpeed;
+    }
+
+
+    double limelight_aim_prop(){
+        double aimP = .01;
+
+        double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
+
+        
+        targetingAngularVelocity *= MAX_ANGULAR_VELOCITY;
+
+        targetingAngularVelocity *= 1.0;
+
+        return targetingAngularVelocity;
+    }
     
     // Telemetry
 
@@ -132,27 +162,7 @@ public class DrivetrainSubsystem implements Subsystem {
 
 
 
-    double limelight_aim_prop(){
-        //double aimP = 1;
-
-        double targetingAngularVelocity = LimelightHelpers.getTX("komodo");
-
-      //  targetingAngularVelocity *= MAX_ANGULAR_VELOCITY;
-
-        //targetingAngularVelocity *= -1.0;
-
-        return targetingAngularVelocity;
-    }
-
     
-
-    double limelight_range_prop(){
-        double rangeP = .1;
-        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") *rangeP;
-        targetingForwardSpeed *= MAX_MODULE_VELOCITY;
-        //targetingForwardSpeed *= -1.0;
-        return targetingForwardSpeed;
-    }
 
     public DrivetrainSubsystem(Field2d field) {
         this.field = field;
@@ -224,9 +234,9 @@ public class DrivetrainSubsystem implements Subsystem {
         
         updateTelemetry();
 
-        double x = tx.getDouble(0.0);
+        // double x = tx.getDouble(0.0);
 
-        System.out.println(x);
+        // System.out.println(x);
         
     }
 
@@ -258,41 +268,64 @@ public class DrivetrainSubsystem implements Subsystem {
 
     private void visionPosePeriodic() {
         
-        if(validTargetSubscriber.get() != 1)
-            return;
+        // if(validTargetSubscriber.get() != 1)
+        //     return;
 
-        double[] botPose = botPoseSubscriber.get();
-        if(botPose.length < 7)
-            return;
+        // double[] botPose = botPoseSubscriber.get();
+        // if(botPose.length < 7)
+        //     return;
         
-        Pose2d visionPose = new Pose2d(botPose[0] + FIELD_LENGTH / 2D, botPose[1] + FIELD_WIDTH / 2D, Rotation2d.fromDegrees(botPose[5]));
-        double measurementTime = Timer.getFPGATimestamp() - botPose[6] / 1000; // compensate for capture and processing latency
+        // Pose2d visionPose = new Pose2d(botPose[0] + FIELD_LENGTH / 2D, botPose[1] + FIELD_WIDTH / 2D, Rotation2d.fromDegrees(botPose[5]));
+        // double measurementTime = Timer.getFPGATimestamp() - botPose[6] / 1000; // compensate for capture and processing latency
         
-        poseEstimator.addVisionMeasurement(visionPose, measurementTime);
+        // poseEstimator.addVisionMeasurement(visionPose, measurementTime);
+
+
+        
     }
+
+
+    
 
     public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
         drive(chassisSpeeds, false);
+        
+        
     }
 
+    
+       
+    
 
-
-
-
-    public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative) {
+    
+    public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative, double periodSeconds) {
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, angularVelocity);
-        SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(fieldRelative? ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getAdjustedRotation()) : chassisSpeeds);
+        SwerveModuleState[] moduleStates = 
+        kinematics.toSwerveModuleStates(
+            fieldRelative
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(
+                chassisSpeeds, getAdjustedRotation()) : chassisSpeeds);
+
+        // var moduleStates = kinematics.toSwerveModuleStates(
+        //     ChassisSpeeds.discretize(
+        //         fieldRelative
+        //         ? ChassisSpeeds.fromFieldRelativeSpeeds(
+        //             xSpeed, ySpeed, angularVelocity, getAdjustedRotation())
+        //             : new ChassisSpeeds(xSpeed, ySpeed, angularVelocity), periodSeconds));
+
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, MAX_MODULE_VELOCITY);
+
+         
 
         setModuleStates(moduleStates);
     }
 
     public void drive(ChassisSpeeds speeds, boolean fieldRelative) {
-        drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, fieldRelative);
+        drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, fieldRelative, counter.getPeriod());
     }
 
     public void stopMotion() {
-        drive(0, 0, 0, false);
+        drive(0, 0, 0, false, counter.getPeriod());
     }
 
     public void zeroGyro() {
@@ -372,7 +405,7 @@ public class DrivetrainSubsystem implements Subsystem {
             double xVelocity = MathUtil.applyDeadband(xAxis.getAsDouble(), 0.1) * MAX_MODULE_VELOCITY * (slowMode ? LINEAR_SLOW_MODE_MODIFIER : 1);
             double yVelocity = MathUtil.applyDeadband(yAxis.getAsDouble(), 0.1) * MAX_MODULE_VELOCITY * (slowMode ? LINEAR_SLOW_MODE_MODIFIER : 1);
             double rotVelocity = MathUtil.applyDeadband(rotAxis.getAsDouble(), 0.1) * MAX_ANGULAR_VELOCITY * (slowMode ? ANGULAR_SLOW_MODE_MODIFIER : 1);
-            drive(xVelocity, yVelocity, rotVelocity, FIELD_RELATIVE_DRIVE);
+            drive(xVelocity, yVelocity, rotVelocity, FIELD_RELATIVE_DRIVE, counter.getPeriod());
 
         }, this);
     }
@@ -406,11 +439,11 @@ public class DrivetrainSubsystem implements Subsystem {
 
 
     public Command aimAndRangeCommand(){
-        final var rot_limelight = limelight_aim_prop();
-        final var forward_limelight = limelight_range_prop();
+        
+        //final var forward_limelight = limelight_range_prop();
 
         return Commands.run(
-    () -> {/*drive(0, 0, rot_limelight, false);*/System.out.println("Ran the aim thingy: " + rot_limelight);}, 
+    () -> {drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod())/*System.out.println(limelight_aim_prop())*/;}, 
             this
             );    
             

@@ -74,7 +74,7 @@ public class DrivetrainSubsystem implements Subsystem {
     double limelight_range_prop(){
         double rangeP = .04;
         double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * rangeP;
-        targetingForwardSpeed *= MAX_MODULE_VELOCITY;
+        targetingForwardSpeed *= 1;
         targetingForwardSpeed *= -1.0;
         return targetingForwardSpeed;
     }
@@ -86,7 +86,7 @@ public class DrivetrainSubsystem implements Subsystem {
         double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
 
         
-        targetingAngularVelocity *= MAX_ANGULAR_VELOCITY;
+        targetingAngularVelocity *= 3 * Math.PI;
 
         targetingAngularVelocity *= 1.0;
 
@@ -452,13 +452,31 @@ public class DrivetrainSubsystem implements Subsystem {
         //final var forward_limelight = limelight_range_prop();
 
         return Commands.run(
-    () -> {drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod())/*System.out.println(limelight_aim_prop())*/;}, 
+    () -> {
+        drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod());/*System.out.println(limelight_aim_prop())*/
+            //  if(LimelightHelpers.getTX("limelight") > 1.65 || LimelightHelpers.getTX("limelight") > -1.5){
+            //     drive(0, 0, limelight_aim_prop(), false, counter.getPeriod());
+            // } else {
+            //    drive(limelight_range_prop(), 0, 0, false, counter.getPeriod());
+            //    //System.out.println("drive");
+             }, 
             this
-            );    
+            );  
+    
+        // return Commands.sequence(
+        //     rangeCommand()
+        // );
             
             
         
     }
+
+    // private Command rangeCommand(){
+    //     return Commands.run(() -> {drive(limelight_range_prop(), 0, 0, false, counter.getPeriod());}, this);
+    // }
+    // private Command aimCommand(){
+    //     return Commands.run(() -> {drive(0, 0, limelight_aim_prop(), false, counter.getPeriod());}, this);
+    // }
 
     public void runDriveVolts(double voltage){
         frontLeft.runForward(voltage);

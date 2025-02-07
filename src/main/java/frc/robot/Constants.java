@@ -61,6 +61,8 @@ public final class Constants {
 	public static final double WHEEL_DIAMETER = 0.1016;
 	public static final double DRIVE_REDUCTION = (14.0 / 50.0) * (25.0 / 19.0) * (15.0 / 45.0);
 	public static final double STEER_REDUCTION = (15.0 / 32.0) * (10.0 / 60.0);
+
+	public static final double LIMELIGHT_X_OFFSET = 0;
 	
 	public static final double MAX_MODULE_VELOCITY = 4.058; // physical maximum attainable speed of swerve modules
 	public static final double MAX_MODULE_ACCEL = 21; // physical maximum attainable accel of swerve modules
@@ -94,4 +96,5 @@ public final class Constants {
     public static final double FIELD_LENGTH = 16.54;
 
     public static final int LED_CHANNEL = 0;
+	public static final double ATBDist = 0.3; // TODO: FIND HORIZONTAL DISTANCE from april tag to branch
 }

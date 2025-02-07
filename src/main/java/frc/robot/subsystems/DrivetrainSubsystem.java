@@ -85,7 +85,6 @@ public class DrivetrainSubsystem implements Subsystem {
 
         double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
 
-        
         targetingAngularVelocity *= 3 * Math.PI;
 
         targetingAngularVelocity *= 1.0;
@@ -233,7 +232,6 @@ public class DrivetrainSubsystem implements Subsystem {
 
     @Override
     public void periodic() {
-
         // does not need to use adjusted rotation, odometry handles it.
         poseEstimator.update(navX.getRotation2d(), getSwervePositions());
         field.setRobotPose(getPose());
@@ -242,7 +240,8 @@ public class DrivetrainSubsystem implements Subsystem {
             visionPosePeriodic();
         
         updateTelemetry();
-
+        //if()
+        
         // double x = tx.getDouble(0.0);
 
         // System.out.println(x);
@@ -490,5 +489,15 @@ public class DrivetrainSubsystem implements Subsystem {
         frontRight.runRotation(voltage);
         backLeft.runRotation(voltage);
         backRight.runRotation(voltage);
+    }
+
+
+    public Command alignToBranch(int reefSideId, boolean left) //bool left = true aligns to the branch left of the april tag, otherwise aligns to right
+    {
+        return Commands.run(() -> {
+        LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{reefSideId});
+        aimAndRangeCommand();
+        drive(0, (ATBDist+LIMELIGHT_X_OFFSET/(2*ATBDist/MAX_MODULE_VELOCITY)), 0.5 * MAX_MODULE_VELOCITY * (left ? -1: 1), FIELD_RELATIVE_DRIVE, 2*ATBDist/MAX_MODULE_VELOCITY); //drive left if left, right if right
+    }, this);
     }
 }

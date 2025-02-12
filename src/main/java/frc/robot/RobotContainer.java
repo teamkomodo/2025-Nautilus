@@ -7,7 +7,7 @@ package frc.robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.util.BlinkinPattern;
-import com.pathplanner.lib.auto.AutoBuilder;
+//import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,7 +27,7 @@ public class RobotContainer {
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
     private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
-    
+
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
@@ -46,13 +46,10 @@ public class RobotContainer {
 				() -> driverController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
 		));
 
-
-        Trigger driverControllerA = driverController.a();
-        driverControllerA.whileTrue(drivetrainSubsystem.aimAndRangeCommand());
-
-
-
-
+        Trigger driverLeftTrigger = driverController.leftTrigger();
+        Trigger driverRightTrigger = driverController.rightTrigger();
+        driverLeftTrigger.onTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToLeftBranch()));
+        driverRightTrigger.onTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToRightBranch()));
     }
 
     public void teleopInit() {
@@ -61,7 +58,7 @@ public class RobotContainer {
     }
     
     public Command getAutonomousCommand() {
-        return AutoBuilder.followPath(null);
+        return null; //AutoBuilder.followPath(null);
     }
 
     private void registerNamedCommands() {

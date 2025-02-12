@@ -10,7 +10,6 @@ import java.util.function.BooleanSupplier;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 
-//import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -32,6 +31,7 @@ public final class Constants {
     public static final int OPERATOR_XBOX_PORT = 1;
 
 	public static final boolean FIELD_RELATIVE_DRIVE = true;
+	public static final boolean ALIGNMENT_DRIVE = false;
 	public static final double LINEAR_SLOW_MODE_MODIFIER = 0.5;
 	public static final double ANGULAR_SLOW_MODE_MODIFIER = 0.2;
 	
@@ -91,10 +91,20 @@ public final class Constants {
         return false;
     };
 
-    // FRC Field
-    public static final double FIELD_WIDTH = 8.21; // m approxiamation: Field Length is 26ft. 11 1/8 in wide
-    public static final double FIELD_LENGTH = 16.54;
+	public static final int LED_CHANNEL = 0;
 
-    public static final int LED_CHANNEL = 0;
-	public static final double ATBDist = 0.3; // TODO: FIND HORIZONTAL DISTANCE from april tag to branch
+    // FRC Field
+    public static final double FIELD_WIDTH = 8.21; // approxiamation: Field Length is 26ft. 11 1/8 in wide
+    public static final double FIELD_LENGTH = 16.54;
+	public static final double APRILTAG_TO_BRANCH_X_DISTANCE = 0.1651; // horizontal distance from april tag to branch in meters
+	
+	// Vision
+	public static final double LIMELIGHT_TO_APRILTAG_Y_DISTANCE = 0.6604;
+	public static final double LIMELIGHT_ROBOT_X_OFFSET = 0;
+	public static final double ROBOT_ALIGNMENT_SPEED = 1.2;
+	public static final double ROBOT_ALIGN_SPEED_FACTOR = 1.4;
+
+	public static final double APRILTAG_HEIGHT = 0.5715;
+	public static final double LIMELIGHT_ROBOT_Y_OFFSET = -0.0254;
+	public static final double LIMELIGHT_HEIGHT = 0.1778;
 }

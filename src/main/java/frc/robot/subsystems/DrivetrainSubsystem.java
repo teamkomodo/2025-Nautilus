@@ -15,6 +15,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -31,8 +33,10 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -60,16 +64,15 @@ public class DrivetrainSubsystem implements Subsystem {
 
     private static boolean useVision = true;
 
-   private final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
-   // NetworkTableEntry tx = limelightNT.getEntry("tx");
+    DoublePublisher branchOffsetPublisher;
+    DoublePublisher alignDriveTimePublisher;
 
-   // private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
-    
-  //  private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
+    private double branchOffset;
+    private double alignDriveTime;
+    private double reefOffset;
 
-    
-  
-    
+    // private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
+    // private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
 
     double limelight_range_prop(){
         double rangeP = .04;
@@ -79,21 +82,15 @@ public class DrivetrainSubsystem implements Subsystem {
         return targetingForwardSpeed;
     }
 
-
     double limelight_aim_prop(){
         double aimP = .01;
-
         double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
-
         targetingAngularVelocity *= 3 * Math.PI;
-
         targetingAngularVelocity *= 1.0;
-
         return targetingAngularVelocity;
     }
     
     // Telemetry
-
     private final StructArrayPublisher<SwerveModuleState> measuredSwerveStatesPublisher = drivetrainNT.getStructArrayTopic(
         "MeasuredSwerveStates",
         SwerveModuleState.struct
@@ -159,14 +156,17 @@ public class DrivetrainSubsystem implements Subsystem {
     private boolean slowMode = false;
     private double rotationOffsetRadians = 0.0;
 
-
-
-    
-
     public DrivetrainSubsystem(Field2d field) {
         this.field = field;
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+
+        branchOffsetPublisher = drivetrainNT.getDoubleTopic("branchoffset").publish();
+        alignDriveTimePublisher = drivetrainNT.getDoubleTopic("aligndrivetime").publish();
+
+        branchOffset = 0;
+        alignDriveTime = 0;
+        reefOffset = 0;
 
         // AutoBuilder.configure(
         //     this::getPose,
@@ -178,8 +178,6 @@ public class DrivetrainSubsystem implements Subsystem {
         //     ON_RED_ALLIANCE,
         //     this
         // );
-
-
 
         //only tracks specific apriltags depending on alliance
         if(ON_RED_ALLIANCE.getAsBoolean() == false){
@@ -236,16 +234,9 @@ public class DrivetrainSubsystem implements Subsystem {
         poseEstimator.update(navX.getRotation2d(), getSwervePositions());
         field.setRobotPose(getPose());
 
-        if(useVision)
-            visionPosePeriodic();
+        visionPosePeriodic();
         
         updateTelemetry();
-        //if()
-        
-        // double x = tx.getDouble(0.0);
-
-        // System.out.println(x);
-        
     }
 
     private void updateTelemetry() {
@@ -274,38 +265,12 @@ public class DrivetrainSubsystem implements Subsystem {
         robotPosePublisher.set(getPose());
     }
 
-    private void visionPosePeriodic() {
-        
-        // if(validTargetSubscriber.get() != 1)
-        //     return;
-
-        // double[] botPose = botPoseSubscriber.get();
-        // if(botPose.length < 7)
-        //     return;
-        
-        // Pose2d visionPose = new Pose2d(botPose[0] + FIELD_LENGTH / 2D, botPose[1] + FIELD_WIDTH / 2D, Rotation2d.fromDegrees(botPose[5]));
-        // double measurementTime = Timer.getFPGATimestamp() - botPose[6] / 1000; // compensate for capture and processing latency
-        
-        // poseEstimator.addVisionMeasurement(visionPose, measurementTime);
-
-
-        
-    }
-
-
-    
+    private void visionPosePeriodic() {}
 
     public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
         drive(chassisSpeeds, false);
-        
-        
     }
 
-    
-       
-    
-
-    
     public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative, double periodSeconds) {
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, angularVelocity);
         SwerveModuleState[] moduleStates = 
@@ -322,9 +287,6 @@ public class DrivetrainSubsystem implements Subsystem {
         //             : new ChassisSpeeds(xSpeed, ySpeed, angularVelocity), periodSeconds));
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, MAX_MODULE_VELOCITY);
-
-         
-
         setModuleStates(moduleStates);
     }
 
@@ -334,6 +296,13 @@ public class DrivetrainSubsystem implements Subsystem {
 
     public void stopMotion() {
         drive(0, 0, 0, false, counter.getPeriod());
+    }
+
+    public void timedDriveCommand(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative, double periodSeconds, double driveTime) {
+        new SequentialCommandGroup(
+            Commands.run(() -> drive(xSpeed, ySpeed, angularVelocity, fieldRelative, periodSeconds), this).withTimeout(driveTime),
+            Commands.runOnce(() -> stopMotion())
+        ).schedule();
     }
 
     public void zeroGyro() {
@@ -444,38 +413,11 @@ public class DrivetrainSubsystem implements Subsystem {
         );
     }
 
-
-
     public Command aimAndRangeCommand(){
-        
-        //final var forward_limelight = limelight_range_prop();
-
-        return Commands.run(
-    () -> {
-        drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod());/*System.out.println(limelight_aim_prop())*/
-            //  if(LimelightHelpers.getTX("limelight") > 1.65 || LimelightHelpers.getTX("limelight") > -1.5){
-            //     drive(0, 0, limelight_aim_prop(), false, counter.getPeriod());
-            // } else {
-            //    drive(limelight_range_prop(), 0, 0, false, counter.getPeriod());
-            //    //System.out.println("drive");
-             }, 
-            this
-            );  
-    
-        // return Commands.sequence(
-        //     rangeCommand()
-        // );
-            
-            
-        
+        return Commands.run(() -> {
+            drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod());/*System.out.println(limelight_aim_prop())*/
+        }, this);  
     }
-
-    // private Command rangeCommand(){
-    //     return Commands.run(() -> {drive(limelight_range_prop(), 0, 0, false, counter.getPeriod());}, this);
-    // }
-    // private Command aimCommand(){
-    //     return Commands.run(() -> {drive(0, 0, limelight_aim_prop(), false, counter.getPeriod());}, this);
-    // }
 
     public void runDriveVolts(double voltage){
         frontLeft.runForward(voltage);
@@ -491,13 +433,31 @@ public class DrivetrainSubsystem implements Subsystem {
         backRight.runRotation(voltage);
     }
 
+    public void alignToRightBranch() {
+        reefOffset = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(LimelightHelpers.getTY("limelight")) + LIMELIGHT_ROBOT_Y_OFFSET;
+        branchOffset = reefOffset
+            / Math.tan(Math.toRadians(90 - LimelightHelpers.getTX("limelight")))
+            + LIMELIGHT_ROBOT_X_OFFSET;
 
-    public Command alignToBranch(int reefSideId, boolean left) //bool left = true aligns to the branch left of the april tag, otherwise aligns to right
-    {
-        return Commands.run(() -> {
-        LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{reefSideId});
-        aimAndRangeCommand();
-        drive(0, (ATBDist+LIMELIGHT_X_OFFSET/(2*ATBDist/MAX_MODULE_VELOCITY)), 0.5 * MAX_MODULE_VELOCITY * (left ? -1: 1), FIELD_RELATIVE_DRIVE, 2*ATBDist/MAX_MODULE_VELOCITY); //drive left if left, right if right
-    }, this);
+        branchOffset += APRILTAG_TO_BRANCH_X_DISTANCE;        
+        alignDriveTime = Math.abs(branchOffset / ROBOT_ALIGNMENT_SPEED * ROBOT_ALIGN_SPEED_FACTOR);
+
+        double ySpeed = reefOffset /alignDriveTime;
+
+        timedDriveCommand(ySpeed, -ROBOT_ALIGNMENT_SPEED, 0, ALIGNMENT_DRIVE, counter.getPeriod(), alignDriveTime);
+    }
+
+    public void alignToLeftBranch() {
+        reefOffset = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(Math.toRadians(LimelightHelpers.getTY("limelight"))) + LIMELIGHT_ROBOT_Y_OFFSET;
+        branchOffset = reefOffset
+            / Math.tan(Math.toRadians(90 - LimelightHelpers.getTX("limelight")))
+            + LIMELIGHT_ROBOT_X_OFFSET;
+
+        branchOffset -= APRILTAG_TO_BRANCH_X_DISTANCE;        
+        alignDriveTime = Math.abs(branchOffset / ROBOT_ALIGNMENT_SPEED * ROBOT_ALIGN_SPEED_FACTOR);
+
+        double ySpeed = reefOffset /alignDriveTime;
+
+        timedDriveCommand(ySpeed, ROBOT_ALIGNMENT_SPEED, 0, ALIGNMENT_DRIVE, counter.getPeriod(), alignDriveTime);
     }
 }

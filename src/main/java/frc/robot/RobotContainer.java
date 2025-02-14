@@ -7,6 +7,8 @@ package frc.robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.util.BlinkinPattern;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.XboxController;
 //import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 
@@ -31,7 +33,17 @@ public class RobotContainer {
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
-    }    
+    } 
+
+    private Command xboxRumbleCommand(CommandXboxController controller, double time) {
+            return Commands.runEnd(() -> {
+                controller.setRumble(RumbleType.kLeftRumble, 1);
+                controller.setRumble(RumbleType.kRightRumble, 1);
+            }, () -> {
+                controller.setRumble(RumbleType.kLeftRumble, 0);
+                controller.setRumble(RumbleType.kRightRumble, 0);
+            }).withTimeout(time);
+    }
     
     private void configureBindings() {
 
@@ -48,8 +60,8 @@ public class RobotContainer {
 
         Trigger driverLeftTrigger = driverController.leftTrigger();
         Trigger driverRightTrigger = driverController.rightTrigger();
-        driverLeftTrigger.onTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToLeftBranch()));
-        driverRightTrigger.onTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToRightBranch()));
+        driverLeftTrigger.whileTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToBranch(false)));
+        driverRightTrigger.whileTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToBranch(true)));
     }
 
     public void teleopInit() {

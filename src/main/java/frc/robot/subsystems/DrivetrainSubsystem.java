@@ -62,18 +62,6 @@ public class DrivetrainSubsystem implements Subsystem {
     Counter counter = new Counter(Counter.Mode.kPulseLength);
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
 
-    private static boolean useVision = true;
-
-    DoublePublisher branchOffsetPublisher;
-    DoublePublisher alignDriveTimePublisher;
-
-    private double branchOffset;
-    private double alignDriveTime;
-    private double reefOffset;
-
-    // private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
-    // private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
-
     double limelight_range_prop(){
         double rangeP = .04;
         double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * rangeP;
@@ -160,13 +148,6 @@ public class DrivetrainSubsystem implements Subsystem {
         this.field = field;
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
-
-        branchOffsetPublisher = drivetrainNT.getDoubleTopic("branchoffset").publish();
-        alignDriveTimePublisher = drivetrainNT.getDoubleTopic("aligndrivetime").publish();
-
-        branchOffset = 0;
-        alignDriveTime = 0;
-        reefOffset = 0;
 
         // AutoBuilder.configure(
         //     this::getPose,
@@ -367,7 +348,8 @@ public class DrivetrainSubsystem implements Subsystem {
         rotationOffsetRadians = -navX.getRotation2d().getRadians() + rotation.getRadians();
     }
 
-    // Commands
+    // teleop drive
+
     public Command enableSlowModeCommand() {
         return Commands.runOnce(() -> { slowMode = true; });
     }
@@ -386,6 +368,8 @@ public class DrivetrainSubsystem implements Subsystem {
 
         }, this);
     }
+
+    // sysID
 
     public Command driveSysIdRoutineCommand(){
         return Commands.sequence(
@@ -413,12 +397,6 @@ public class DrivetrainSubsystem implements Subsystem {
         );
     }
 
-    public Command aimAndRangeCommand(){
-        return Commands.run(() -> {
-            drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod());/*System.out.println(limelight_aim_prop())*/
-        }, this);  
-    }
-
     public void runDriveVolts(double voltage){
         frontLeft.runForward(voltage);
         frontRight.runForward(voltage);
@@ -433,31 +411,58 @@ public class DrivetrainSubsystem implements Subsystem {
         backRight.runRotation(voltage);
     }
 
-    public void alignToRightBranch() {
-        reefOffset = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(LimelightHelpers.getTY("limelight")) + LIMELIGHT_ROBOT_Y_OFFSET;
-        branchOffset = reefOffset
+    // vision
+
+    public double calculateAlignDistance(boolean right) {
+        double limelightDistance = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT)
+            / Math.tan(Math.toRadians(LIMELIGHT_ANGLE_OFFSET + LimelightHelpers.getTY("limelight")));
+
+        double branchOffset = limelightDistance
             / Math.tan(Math.toRadians(90 - LimelightHelpers.getTX("limelight")))
             + LIMELIGHT_ROBOT_X_OFFSET;
 
-        branchOffset += APRILTAG_TO_BRANCH_X_DISTANCE;        
-        alignDriveTime = Math.abs(branchOffset / ROBOT_ALIGNMENT_SPEED * ROBOT_ALIGN_SPEED_FACTOR);
+        if(right)
+            branchOffset += APRILTAG_TO_BRANCH_X_DISTANCE;
+        else
+            branchOffset -= APRILTAG_TO_BRANCH_X_DISTANCE;
 
-        double ySpeed = reefOffset /alignDriveTime;
-
-        timedDriveCommand(ySpeed, -ROBOT_ALIGNMENT_SPEED, 0, ALIGNMENT_DRIVE, counter.getPeriod(), alignDriveTime);
+        return branchOffset;
     }
 
-    public void alignToLeftBranch() {
-        reefOffset = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(Math.toRadians(LimelightHelpers.getTY("limelight"))) + LIMELIGHT_ROBOT_Y_OFFSET;
-        branchOffset = reefOffset
-            / Math.tan(Math.toRadians(90 - LimelightHelpers.getTX("limelight")))
-            + LIMELIGHT_ROBOT_X_OFFSET;
+    public double calculateAlignTime(boolean right) {
+        double alignDriveTime = Math.pow((Math.abs(calculateAlignDistance(right)) / ROBOT_ALIGNMENT_SPEED * ALIGN_LINEAR_SPEED_FACTOR), ALIGN_EXPONENTIAL_SPEED_FACTOR);
+        return alignDriveTime;
+    }
 
-        branchOffset -= APRILTAG_TO_BRANCH_X_DISTANCE;        
-        alignDriveTime = Math.abs(branchOffset / ROBOT_ALIGNMENT_SPEED * ROBOT_ALIGN_SPEED_FACTOR);
+    public double calculateAlignSpeedDirection(boolean right) {
+        if(right) {
+            if(calculateAlignDistance(true) < 0)
+                return ROBOT_ALIGNMENT_SPEED;
+            else
+                return -ROBOT_ALIGNMENT_SPEED;
+        } else {
+            if(calculateAlignDistance(false) < 0)
+                return ROBOT_ALIGNMENT_SPEED;
+            else
+                return -ROBOT_ALIGNMENT_SPEED;
+        }
+    }
 
-        double ySpeed = reefOffset /alignDriveTime;
+    public void alignToBranch(boolean right) {
+        if(LimelightHelpers.getTV("limelight")) {
+            double alignDriveTime = Math.abs(calculateAlignTime(right));
+            double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
+            timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, counter.getPeriod(), alignDriveTime);
+        }
+    }
 
-        timedDriveCommand(ySpeed, ROBOT_ALIGNMENT_SPEED, 0, ALIGNMENT_DRIVE, counter.getPeriod(), alignDriveTime);
+    public void stopAlign () {
+        Commands.run(() -> drive(0, 0, 0, ALIGNMENT_DRIVE, counter.getPeriod()), this).schedule();
+    }
+
+    public Command aimAndRangeCommand(){
+        return Commands.run(() -> {
+            drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod());/*System.out.println(limelight_aim_prop())*/
+        }, this);  
     }
 }

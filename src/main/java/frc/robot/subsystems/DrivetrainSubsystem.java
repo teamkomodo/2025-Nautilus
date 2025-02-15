@@ -65,8 +65,8 @@ public class DrivetrainSubsystem implements Subsystem {
     double limelightY(){
         double yP = .04;
         double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * yP;
-        targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -1.5;
+        //targetingForwardSpeed *= 1;
+        targetingForwardSpeed *= -3;
         return targetingForwardSpeed;
     }
 
@@ -74,7 +74,7 @@ public class DrivetrainSubsystem implements Subsystem {
         double aimP = .01;
         double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
         targetingAngularVelocity *= 3 * Math.PI;
-        targetingAngularVelocity *= 1.5;
+        targetingAngularVelocity *= 3.5;
         return targetingAngularVelocity;
     }
 
@@ -82,8 +82,24 @@ public class DrivetrainSubsystem implements Subsystem {
         double xP = .04;
         double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
         targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -1.5;
+        targetingForwardSpeed *= -3.5;
         return targetingForwardSpeed;
+    }
+
+
+    double limelightZ(){
+        double zP = 0.4;
+        double targetingZ = NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5] * zP;
+        targetingZ *= 1;
+
+        
+
+       if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.5){
+            return targetingZ;
+            
+        }
+        return 0;
+        
     }
     
     // Telemetry
@@ -226,6 +242,8 @@ public class DrivetrainSubsystem implements Subsystem {
         visionPosePeriodic();
         
         updateTelemetry();
+        
+        
     }
 
     private void updateTelemetry() {
@@ -468,13 +486,13 @@ public class DrivetrainSubsystem implements Subsystem {
         Commands.run(() -> drive(0, 0, 0, ALIGNMENT_DRIVE), this).schedule();
     }
 
-    public Command aimAndRangeCommand(){
+    public Command limelightForwardCommand(){
         return Commands.run(() -> { 
            if(Math.abs(LimelightHelpers.getTY("limelight")) > 0.01){
                 drive(limelightY(), 0, 0, false);
   
             } else {
-                timedDriveCommand(1, 0, 0, false,  0.01);
+                timedDriveCommand(1, 0, 0, false,  0.2);
             }
         }, this);  
     }
@@ -491,4 +509,15 @@ public class DrivetrainSubsystem implements Subsystem {
             drive(0, 0, limelightRot(), false);
         }, this);
     }
+
+    public Command parallelCommand(){
+        return Commands.run(() -> {
+            drive(0, 0, -limelightZ(), false);
+        }, this);
+    }
+
+
+    // public limelightAlignCommand(){
+    //     return Commands.sequence(null);
+    // }
 }

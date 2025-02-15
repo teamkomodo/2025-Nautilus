@@ -64,13 +64,13 @@ public class RobotContainer {
         driverRightTrigger.whileTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToBranch(true)));
 
         Trigger driverAButton = driverController.a();
-        driverAButton.whileTrue(drivetrainSubsystem.aimAndRangeCommand());
+        driverAButton.whileTrue(drivetrainSubsystem.limelightForwardCommand());
 
         Trigger driverBButton = driverController.b();
         driverBButton.whileTrue(drivetrainSubsystem.limelightCenterCommand());
 
         Trigger driverYButton = driverController.y();
-        driverYButton.whileTrue(drivetrainSubsystem.limelightPointCommand());
+        driverYButton.whileTrue(drivetrainSubsystem.parallelCommand());
     }
 
     public void teleopInit() {

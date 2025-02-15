@@ -79,7 +79,7 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
     double limelightX(){
-        double xP = .04;
+        double xP = 0.02;
         double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
         targetingForwardSpeed *= 1;
         targetingForwardSpeed *= -3.5;
@@ -243,7 +243,7 @@ public class DrivetrainSubsystem implements Subsystem {
         
         updateTelemetry();
         
-        
+        System.out.println(limelightZ());
     }
 
     private void updateTelemetry() {
@@ -500,7 +500,11 @@ public class DrivetrainSubsystem implements Subsystem {
 
     public Command limelightCenterCommand(){
         return Commands.run(() -> {
+
+            
             drive(0, limelightX(), 0, false);
+        
+            
         }, this);
     }
 
@@ -512,12 +516,24 @@ public class DrivetrainSubsystem implements Subsystem {
 
     public Command parallelCommand(){
         return Commands.run(() -> {
-            drive(0, 0, -limelightZ(), false);
+
+             drive(0, 0, -limelightZ(), false);
+        
+
         }, this);
     }
 
 
-    // public limelightAlignCommand(){
-    //     return Commands.sequence(null);
-    // }
+    public Command limelightAlignCommand(){
+        return Commands.sequence(
+            Commands.run(() -> {
+                if(limelightZ()!=0) {
+                parallelCommand();
+            }}, this),
+            Commands.waitSeconds(2),
+            limelightCenterCommand(),
+            Commands.waitSeconds(2),
+            limelightForwardCommand()
+        );
+    }
 }

@@ -71,6 +71,9 @@ public class RobotContainer {
 
         Trigger driverYButton = driverController.y();
         driverYButton.whileTrue(drivetrainSubsystem.parallelCommand());
+
+        Trigger driverXButton = driverController.x();
+        driverXButton.whileTrue(drivetrainSubsystem.limelightAlignCommand());
     }
 
     public void teleopInit() {

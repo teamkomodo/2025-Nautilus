@@ -109,4 +109,5 @@ public final class Constants {
 	public static final double LIMELIGHT_ROBOT_Y_OFFSET = -0.0254;
 	public static final double LIMELIGHT_HEIGHT = 0.1778;
 	public static final double LIMELIGHT_ANGLE_OFFSET = 28.3; // degrees
+	public static final double TY_ALIGN_THRESHOLD = -3;
 }

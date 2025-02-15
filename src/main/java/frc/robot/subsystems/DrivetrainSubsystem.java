@@ -62,20 +62,28 @@ public class DrivetrainSubsystem implements Subsystem {
     Counter counter = new Counter(Counter.Mode.kPulseLength);
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
 
-    double limelight_range_prop(){
-        double rangeP = .04;
-        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * rangeP;
+    double limelightY(){
+        double yP = .04;
+        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * yP;
         targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -1.0;
+        targetingForwardSpeed *= -1.5;
         return targetingForwardSpeed;
     }
 
-    double limelight_aim_prop(){
+    double limelightRot(){
         double aimP = .01;
         double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
         targetingAngularVelocity *= 3 * Math.PI;
-        targetingAngularVelocity *= 1.0;
+        targetingAngularVelocity *= 1.5;
         return targetingAngularVelocity;
+    }
+
+    double limelightX(){
+        double xP = .04;
+        double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
+        targetingForwardSpeed *= 1;
+        targetingForwardSpeed *= -1.5;
+        return targetingForwardSpeed;
     }
     
     // Telemetry
@@ -252,7 +260,7 @@ public class DrivetrainSubsystem implements Subsystem {
         drive(chassisSpeeds, false);
     }
 
-    public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative, double periodSeconds) {
+    public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative) {
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, angularVelocity);
         SwerveModuleState[] moduleStates = 
         kinematics.toSwerveModuleStates(
@@ -272,16 +280,16 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
     public void drive(ChassisSpeeds speeds, boolean fieldRelative) {
-        drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, fieldRelative, counter.getPeriod());
+        drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, fieldRelative);
     }
 
     public void stopMotion() {
-        drive(0, 0, 0, false, counter.getPeriod());
+        drive(0, 0, 0, false);
     }
 
-    public void timedDriveCommand(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative, double periodSeconds, double driveTime) {
+    public void timedDriveCommand(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative, double driveTime) {
         new SequentialCommandGroup(
-            Commands.run(() -> drive(xSpeed, ySpeed, angularVelocity, fieldRelative, periodSeconds), this).withTimeout(driveTime),
+            Commands.run(() -> drive(xSpeed, ySpeed, angularVelocity, fieldRelative), this).withTimeout(driveTime),
             Commands.runOnce(() -> stopMotion())
         ).schedule();
     }
@@ -364,7 +372,7 @@ public class DrivetrainSubsystem implements Subsystem {
             double xVelocity = MathUtil.applyDeadband(xAxis.getAsDouble(), 0.1) * MAX_MODULE_VELOCITY * (slowMode ? LINEAR_SLOW_MODE_MODIFIER : 1);
             double yVelocity = MathUtil.applyDeadband(yAxis.getAsDouble(), 0.1) * MAX_MODULE_VELOCITY * (slowMode ? LINEAR_SLOW_MODE_MODIFIER : 1);
             double rotVelocity = MathUtil.applyDeadband(rotAxis.getAsDouble(), 0.1) * MAX_ANGULAR_VELOCITY * (slowMode ? ANGULAR_SLOW_MODE_MODIFIER : 1);
-            drive(xVelocity, yVelocity, rotVelocity, FIELD_RELATIVE_DRIVE, counter.getPeriod());
+            drive(xVelocity, yVelocity, rotVelocity, FIELD_RELATIVE_DRIVE);
 
         }, this);
     }
@@ -452,17 +460,35 @@ public class DrivetrainSubsystem implements Subsystem {
         if(LimelightHelpers.getTV("limelight")) {
             double alignDriveTime = Math.abs(calculateAlignTime(right));
             double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
-            timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, counter.getPeriod(), alignDriveTime);
+            timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
         }
     }
 
     public void stopAlign () {
-        Commands.run(() -> drive(0, 0, 0, ALIGNMENT_DRIVE, counter.getPeriod()), this).schedule();
+        Commands.run(() -> drive(0, 0, 0, ALIGNMENT_DRIVE), this).schedule();
     }
 
     public Command aimAndRangeCommand(){
-        return Commands.run(() -> {
-            drive(limelight_range_prop(), 0, limelight_aim_prop(), false, counter.getPeriod());/*System.out.println(limelight_aim_prop())*/
+        return Commands.run(() -> { 
+           if(Math.abs(LimelightHelpers.getTY("limelight")) > 0.01){
+                drive(limelightY(), 0, 0, false);
+  
+            } else {
+                timedDriveCommand(1, 0, 0, false,  0.01);
+            }
         }, this);  
+    }
+
+
+    public Command limelightCenterCommand(){
+        return Commands.run(() -> {
+            drive(0, limelightX(), 0, false);
+        }, this);
+    }
+
+    public Command limelightPointCommand(){
+        return Commands.run(() -> {
+            drive(0, 0, limelightRot(), false);
+        }, this);
     }
 }

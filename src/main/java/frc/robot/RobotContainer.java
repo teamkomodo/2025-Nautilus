@@ -36,6 +36,7 @@ public class RobotContainer {
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
+        detectAprilTag(driverController);
     } 
 
     private Command xboxRumbleCommand(CommandXboxController controller, double time) {
@@ -91,6 +92,8 @@ public class RobotContainer {
 
         Trigger driverXButton = driverController.x();
         driverXButton.whileTrue(drivetrainSubsystem.limelightAlignCommand());
+
+        
 
 
 

@@ -26,6 +26,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -37,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -197,9 +199,9 @@ public class DrivetrainSubsystem implements Subsystem {
 
         //only tracks specific apriltags depending on alliance
         if(ON_RED_ALLIANCE.getAsBoolean() == false){
-            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{22,21,20,19,18,17,16,13,12});
+            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{22,21,20,19,18,17});
         } else{
-            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{11,10,9,8,7,6,3,2,1});
+            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{11,10,9,8,7,6});
         }
 
         frontLeft = new FalconSwerveModule(
@@ -256,6 +258,9 @@ public class DrivetrainSubsystem implements Subsystem {
         
         
     }
+
+
+    
 
     private void updateTelemetry() {
         // Swerve

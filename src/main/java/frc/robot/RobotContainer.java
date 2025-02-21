@@ -18,6 +18,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.*;
 
+import java.lang.ModuleLayer.Controller;
+
+import frc.robot.LimelightHelpers;
 
 
 public class RobotContainer {  
@@ -44,6 +47,18 @@ public class RobotContainer {
                 controller.setRumble(RumbleType.kRightRumble, 0);
             }).withTimeout(time);
     }
+
+
+    private void detectAprilTag(CommandXboxController controller){
+        boolean tv = LimelightHelpers.getTV("limelight");
+
+        if(tv){
+            controller.setRumble(RumbleType.kLeftRumble, 1);
+            System.out.println("RUMBBLEEE");
+        } else {
+            controller.setRumble(RumbleType.kLeftRumble, 0);
+        }
+    }
     
     private void configureBindings() {
 
@@ -63,23 +78,30 @@ public class RobotContainer {
         driverLeftTrigger.whileTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToBranch(false)));
         driverRightTrigger.whileTrue(Commands.runOnce(() -> drivetrainSubsystem.alignToBranch(true)));
 
+        
+
         // Trigger driverAButton = driverController.a();
         // driverAButton.whileTrue(drivetrainSubsystem.limelightForwardCommand());
 
         // Trigger driverBButton = driverController.b();
         // driverBButton.whileTrue(drivetrainSubsystem.limelightCenterCommand());
 
-        // Trigger driverYButton = driverController.y();
-        // driverYButton.whileTrue(drivetrainSubsystem.parallelCommand());
+        Trigger driverYButton = driverController.y();
+        driverYButton.whileTrue(xboxRumbleCommand(driverController, 10));
 
         Trigger driverXButton = driverController.x();
         driverXButton.whileTrue(drivetrainSubsystem.limelightAlignCommand());
+
+
+
     }
 
     public void teleopInit() {
         Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();});
         Commands.runOnce(() -> ledSubsystem.setFramePatternCommand(BlinkinPattern.COLOR_1_AND_2_PATTERN_SPARKLE_COLOR_2_ON_COLOR_1));
     }
+
+
     
     public Command getAutonomousCommand() {
         return null; //AutoBuilder.followPath(null);
@@ -88,4 +110,10 @@ public class RobotContainer {
     private void registerNamedCommands() {
 
     }
+
+
+
+    
+
+    
 }

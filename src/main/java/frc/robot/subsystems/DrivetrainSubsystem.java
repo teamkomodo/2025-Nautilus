@@ -66,54 +66,7 @@ public class DrivetrainSubsystem implements Subsystem {
     Counter counter = new Counter(Counter.Mode.kPulseLength);
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
 
-    double limelightY(){
-        double yP = .04;
-        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * yP;
-        //targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -3;
-        
-        if(Math.abs(LimelightHelpers.getTY("limelight")) > 0.5){
-            return targetingForwardSpeed;
-        }
-        return 0;
-
-    }
-
-    // double limelightRot(){
-    //     double aimP = .01;
-    //     double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
-    //     targetingAngularVelocity *= 3 * Math.PI;
-    //     targetingAngularVelocity *= 3.5;
-    //     return targetingAngularVelocity;
-    // }
-
-    double limelightX(){
-        double xP = 0.02;
-        double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
-        targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -3.5;
-        
-        if(Math.abs(LimelightHelpers.getTX("limelight")) > 0){
-            return targetingForwardSpeed;
-        }
-        return 0;
-    }
-
-
-    double limelightZ(){
-        double zP = 0.4;
-        double targetingZ = NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5] *zP;
-        targetingZ *= 1;
-        //if(targetingZ = 0)
-        //spin in place
-        
-        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.5){
-            return targetingZ;
-        }
-        return 0;
-        
-    }
+ 
     
     // Telemetry
     private final StructArrayPublisher<SwerveModuleState> measuredSwerveStatesPublisher = drivetrainNT.getStructArrayTopic(
@@ -254,6 +207,7 @@ public class DrivetrainSubsystem implements Subsystem {
 
         visionPosePeriodic();
         
+        //System.out.println(calculateAlignDistance(false));
         updateTelemetry();
         
         
@@ -455,6 +409,60 @@ public class DrivetrainSubsystem implements Subsystem {
 
     // vision
 
+    double limelightY(){
+        double yP = .04;
+        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * yP;
+        //targetingForwardSpeed *= 1;
+        targetingForwardSpeed *= -3;
+        
+        if(Math.abs(LimelightHelpers.getTY("limelight")) > 0.5){
+            return targetingForwardSpeed;
+        }
+        return 0;
+
+    }
+
+    // double limelightRot(){
+    //     double aimP = .01;
+    //     double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
+    //     targetingAngularVelocity *= 3 * Math.PI;
+    //     targetingAngularVelocity *= 3.5;
+    //     return targetingAngularVelocity;
+    // }
+
+    double limelightX(){
+        double xP = 0.02;
+        double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
+        targetingForwardSpeed *= 1;
+        targetingForwardSpeed *= -3.5;
+        
+        if(Math.abs(LimelightHelpers.getTX("limelight")) > 0){
+            return targetingForwardSpeed;
+        }
+        return 0;
+    }
+
+
+
+    
+
+
+    double limelightZ(){
+        double zP = 0.4;
+        double targetingZ = NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5] *zP;
+        targetingZ *= 1;
+        //if(targetingZ = 0)
+        //spin in place
+        
+        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.5){
+            return -targetingZ;
+        }
+        return 0;
+        
+    }
+
+
     public double calculateAlignDistance(boolean right) {
         double limelightDistance = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT)
             / Math.tan(Math.toRadians(LIMELIGHT_ANGLE_OFFSET + LimelightHelpers.getTY("limelight")));
@@ -463,11 +471,14 @@ public class DrivetrainSubsystem implements Subsystem {
             / Math.tan(Math.toRadians(90 - LimelightHelpers.getTX("limelight")))
             + LIMELIGHT_ROBOT_X_OFFSET;
 
-        if(right)
+        if(right){
             branchOffset += APRILTAG_TO_BRANCH_X_DISTANCE;
-        else
+        }
+        else {
             branchOffset -= APRILTAG_TO_BRANCH_X_DISTANCE;
+        }
 
+        
         return branchOffset;
     }
 
@@ -490,13 +501,44 @@ public class DrivetrainSubsystem implements Subsystem {
         }
     }
 
-    public void alignToBranch(boolean right) {
-        if(LimelightHelpers.getTV("limelight")) {
-            double alignDriveTime = Math.abs(calculateAlignTime(right));
-            double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
-            timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
-        }
+
+
+
+
+    // public void alignToBranch(boolean right) {
+    //     if(LimelightHelpers.getTV("limelight")) {
+    //         double alignDriveTime = Math.abs(calculateAlignTime(right));
+    //         double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
+    //         timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
+    //         //doTheThing(robotAlignmentSpeed, alignDriveTime);
+    //         System.out.println("DO SOMETHING");
+            
+    //     }
+    // }
+
+
+
+    public Command goToBranch(boolean right){
+        return Commands.runOnce(() -> {
+            if(LimelightHelpers.getTV("limelight")) {
+                double alignDriveTime = Math.abs(calculateAlignTime(right));
+                double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
+                timedDriveCommand(0.2, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
+                //doTheThing(robotAlignmentSpeed, alignDriveTime);
+                System.out.println("DO SOMETHING");
+            }
+                        
+                    
+        }, this);
     }
+
+
+    // public void doTheThing(double robotAlignmentSpeed, double alignDriveTime){
+    //     new SequentialCommandGroup(
+    //         Commands.runOnce(() -> {timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);}, this),
+    //         Commands.runOnce(() -> {timedDriveCommand(0.3, 0, 0, ALIGNMENT_DRIVE, 0.3);}, this)
+    //     ).schedule();
+    // }
 
     public void stopAlign () {
         Commands.run(() -> drive(0, 0, 0, ALIGNMENT_DRIVE), this).schedule();
@@ -531,11 +573,14 @@ public class DrivetrainSubsystem implements Subsystem {
     // }
 
 
-    public Command limelightCenterandDriveCommand(){
-        return Commands.run(() -> {
-            drive(limelightY(), limelightX(), -limelightZ(),  false);
-        }, this);
-    }
+    // public Command limelightCenterandDriveCommand(){
+    //     return Commands.run(() -> {
+    //         drive(limelightY(), limelightX(), -limelightZ(),  false);
+    //     }, this);
+    // }
+
+
+
 
     public Command parallelCommand(){        
         return Commands.run(() -> {
@@ -556,11 +601,29 @@ public class DrivetrainSubsystem implements Subsystem {
 
 
     public Command limelightAlignCommand(){
-        return Commands.sequence(
-           // parallelCommand(),
-            limelightCenterandDriveCommand()
-        );
+       return Commands.run(() -> {
+        drive(limelightY(), limelightX(), limelightZ(),  false);
+       }, this);
+            
+        
     }
+
+
+    // public Command branchAlignCommand(boolean right){
+    //     return Commands.run(() ->{
+    //             drive(limelightY(), calculateAlignDistance(right), limelightZ(), false);
+    //     }, this);
+
+    // }
+
+
+
+
+   
+
+
+
+    
 
 
     

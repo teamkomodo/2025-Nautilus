@@ -96,7 +96,7 @@ public final class Constants {
     // FRC Field
     public static final double FIELD_WIDTH = 8.21; // approxiamation: Field Length is 26ft. 11 1/8 in wide
     public static final double FIELD_LENGTH = 16.54;
-	public static final double APRILTAG_TO_BRANCH_X_DISTANCE = 0.1651; // horizontal distance from april tag to branch in meters
+	public static final double APRILTAG_TO_BRANCH_X_DISTANCE = 0.1551; // horizontal distance from april tag to branch in meters
 	
 	// Vision
 	public static final double LIMELIGHT_TO_APRILTAG_Y_DISTANCE = 0.6604;

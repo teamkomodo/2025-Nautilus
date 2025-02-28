@@ -8,10 +8,12 @@ import org.littletonrobotics.urcl.URCL;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.HttpCamera;
+import edu.wpi.first.cscore.HttpCamera.HttpCameraKind;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -23,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 */
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
-    
     private RobotContainer m_robotContainer;
     
     /**
@@ -40,9 +41,9 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog(), true);
         URCL.start();
-        HttpCamera httpCamera = new HttpCamera("CoprocessorCamera", "http://frcvision.local:1181/stream.mjpg");
-        CameraServer.getVideo(httpCamera);
-        Shuffleboard.getTab("Tab").add(httpCamera);
+
+        ShuffleboardTab dashboardTab = Shuffleboard.getTab("Tab"); 
+        dashboardTab.addCamera("limelight", "limelight", "http://10.99.87.11:5800");
     }
     
     /**

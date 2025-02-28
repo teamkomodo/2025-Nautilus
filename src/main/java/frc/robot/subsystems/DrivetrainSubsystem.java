@@ -455,7 +455,7 @@ public class DrivetrainSubsystem implements Subsystem {
         //spin in place
         
         //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.5){
+        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.1){
             return -targetingZ;
         }
         return 0;

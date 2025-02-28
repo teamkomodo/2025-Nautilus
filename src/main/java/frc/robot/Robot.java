@@ -40,7 +40,7 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog(), true);
         URCL.start();
-        HttpCamera httpCamera = new HttpCamera("CoprocessorCamera", "http://frcvision.local:1181/stream.mjpg");
+        HttpCamera httpCamera = new HttpCamera("CoprocessorCamera", "http://10.99.87.11:5801/");
         CameraServer.getVideo(httpCamera);
         Shuffleboard.getTab("Tab").add(httpCamera);
     }

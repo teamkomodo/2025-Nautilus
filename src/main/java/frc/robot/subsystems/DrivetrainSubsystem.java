@@ -523,7 +523,7 @@ public class DrivetrainSubsystem implements Subsystem {
             if(LimelightHelpers.getTV("limelight")) {
                 double alignDriveTime = Math.abs(calculateAlignTime(right));
                 double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
-                timedDriveCommand(0.2, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
+                timedDriveCommand(1.10, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
                 //doTheThing(robotAlignmentSpeed, alignDriveTime);
                 System.out.println("DO SOMETHING");
             }

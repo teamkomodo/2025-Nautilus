@@ -27,7 +27,7 @@ public class RobotContainer {
     private final Field2d field2d = new Field2d();
 
     //Inputs Devices
-    private final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
+    public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
     private final LEDSubsystem ledSubsystem = new LEDSubsystem();

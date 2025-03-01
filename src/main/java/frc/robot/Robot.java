@@ -43,7 +43,7 @@ public class Robot extends TimedRobot {
         URCL.start();
 
         ShuffleboardTab dashboardTab = Shuffleboard.getTab("Tab"); 
-        dashboardTab.addCamera("limelight", "limelight", "http://10.99.87.11:5800/");
+        //dashboardTab.addCamera("limelight", "limelight", "http://10.99.87.11:5800/");
     }
     
     /**

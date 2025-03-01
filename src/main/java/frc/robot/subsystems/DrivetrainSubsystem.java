@@ -25,10 +25,12 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -60,13 +62,15 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.revrobotics.spark.SparkLowLevel.PeriodicFrame;
 
 import frc.robot.LimelightHelpers;
+import frc.robot.RobotContainer;
 
 public class DrivetrainSubsystem implements Subsystem {
 
     Counter counter = new Counter(Counter.Mode.kPulseLength);
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
 
- 
+    public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT);
+    
     
     // Telemetry
     private final StructArrayPublisher<SwerveModuleState> measuredSwerveStatesPublisher = drivetrainNT.getStructArrayTopic(
@@ -138,6 +142,7 @@ public class DrivetrainSubsystem implements Subsystem {
         this.field = field;
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+        
 
         // AutoBuilder.configure(
         //     this::getPose,
@@ -199,6 +204,9 @@ public class DrivetrainSubsystem implements Subsystem {
             new Pose2d());
     }
 
+
+    
+
     @Override
     public void periodic() {
         // does not need to use adjusted rotation, odometry handles it.
@@ -207,8 +215,13 @@ public class DrivetrainSubsystem implements Subsystem {
 
         visionPosePeriodic();
         
+        detectAprilTag(driverController);
         //System.out.println(calculateAlignDistance(false));
         updateTelemetry();
+
+        // if(limelightX() == 0){
+        //     System.out.println("AAAAAA");
+        // }
         
         
     }
@@ -407,7 +420,21 @@ public class DrivetrainSubsystem implements Subsystem {
         backRight.runRotation(voltage);
     }
 
+
+
     // vision
+
+
+    private void detectAprilTag(CommandXboxController controller){
+        boolean tv = LimelightHelpers.getTV("limelight");
+
+        if(tv){
+            controller.setRumble(RumbleType.kRightRumble, 1);
+            //System.out.println("RUMBBLEEE");
+        } else {
+            controller.setRumble(RumbleType.kRightRumble, 0);
+        }
+    }
 
     double limelightY(){
         double yP = .04;
@@ -422,6 +449,7 @@ public class DrivetrainSubsystem implements Subsystem {
 
     }
 
+
     // double limelightRot(){
     //     double aimP = .01;
     //     double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
@@ -431,12 +459,12 @@ public class DrivetrainSubsystem implements Subsystem {
     // }
 
     double limelightX(){
-        double xP = 0.02;
+        double xP = 0.014;
         double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
         targetingForwardSpeed *= 1;
         targetingForwardSpeed *= -3.5;
         
-        if(Math.abs(LimelightHelpers.getTX("limelight")) > 0){
+        if(Math.abs(LimelightHelpers.getTX("limelight")) > 0.5){
             return targetingForwardSpeed;
         }
         return 0;
@@ -450,12 +478,12 @@ public class DrivetrainSubsystem implements Subsystem {
     double limelightZ(){
         double zP = 0.4;
         double targetingZ = NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5] *zP;
-        targetingZ *= 1;
+        targetingZ *= 0.8;
         //if(targetingZ = 0)
         //spin in place
         
         //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.1){
+        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.0){
             return -targetingZ;
         }
         return 0;

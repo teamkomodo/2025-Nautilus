@@ -76,8 +76,8 @@ public class RobotContainer {
 
         Trigger driverLeftTrigger = driverController.leftTrigger();
         Trigger driverRightTrigger = driverController.rightTrigger();
-        driverLeftTrigger.whileTrue(drivetrainSubsystem.goToBranch(false));
-        driverRightTrigger.whileTrue(drivetrainSubsystem.goToBranch(true));
+       // driverLeftTrigger.whileTrue(drivetrainSubsystem.goToBranch(false));
+       // driverRightTrigger.whileTrue(drivetrainSubsystem.goToBranch(true));
 
         
 
@@ -87,7 +87,7 @@ public class RobotContainer {
         driverYButton.whileTrue(xboxRumbleCommand(driverController, 10));
 
         Trigger driverXButton = driverController.x();
-        driverXButton.whileTrue(drivetrainSubsystem.limelightAlignCommand());
+        driverXButton.whileTrue(drivetrainSubsystem.AlignCommand());
 
         
 

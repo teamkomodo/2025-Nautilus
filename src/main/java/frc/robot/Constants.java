@@ -110,4 +110,5 @@ public final class Constants {
 	public static final double LIMELIGHT_HEIGHT = 0.1778;
 	public static final double LIMELIGHT_ANGLE_OFFSET = 28.3; // degrees
 	public static final double TY_ALIGN_THRESHOLD = -3;
+	public static final double ALIGN_TURN_CONSTANT = 0.24;
 }

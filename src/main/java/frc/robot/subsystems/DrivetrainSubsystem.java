@@ -45,13 +45,18 @@ import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+
+
 import static frc.robot.Constants.*;
 
 import java.time.Period;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
-
+import java.util.List;
 import javax.naming.PartialResultException;
+
+import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -61,6 +66,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.revrobotics.spark.SparkLowLevel.PeriodicFrame;
 
+import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
 
@@ -88,6 +94,8 @@ public class DrivetrainSubsystem implements Subsystem {
         Rotation2d.struct
         ).publish();
 
+
+        
     private final StructPublisher<Pose2d> robotPosePublisher = drivetrainNT.getStructTopic("RobotPose", Pose2d.struct).publish();
 
     /*
@@ -128,6 +136,21 @@ public class DrivetrainSubsystem implements Subsystem {
     private final SwerveDrivePoseEstimator poseEstimator;
     private final Field2d field;
 
+   
+
+
+    //fuckin vision ig
+    public PhotonCamera camera = new PhotonCamera("J Jonah Jameson");
+    public boolean targetVisible = false;
+    public double targetYaw;
+
+
+    
+    
+    
+
+    
+    
     private final HolonomicDriveController driveController = new HolonomicDriveController(
         new PIDController(1, 0, 0),
         new PIDController(1, 0, 0),
@@ -215,7 +238,7 @@ public class DrivetrainSubsystem implements Subsystem {
 
         visionPosePeriodic();
         
-        detectAprilTag(driverController);
+        //detectAprilTag(driverController);
         //System.out.println(calculateAlignDistance(false));
         updateTelemetry();
 
@@ -255,7 +278,26 @@ public class DrivetrainSubsystem implements Subsystem {
         robotPosePublisher.set(getPose());
     }
 
-    private void visionPosePeriodic() {}
+    private void visionPosePeriodic() {
+        
+        var results = camera.getAllUnreadResults();
+
+
+
+        if(!results.isEmpty()){
+            var result = results.get(results.size() - 1);
+            if(result.hasTargets()){
+               // System.out.println("found target");
+                for(var target : result.getTargets()){
+                    if(target.getFiducialId() == 1){
+                        targetYaw = target.getYaw();
+                        System.out.println("TargetYaw: " + targetYaw);
+                        targetVisible = true;
+                    }
+                }
+            }
+        }
+    }
 
     public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
         drive(chassisSpeeds, false);
@@ -421,10 +463,77 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
 
-
+ 
     // vision
+    
+
+    // double aimAtTarget(){
+    //     double turnP = 0.0;
+    //     double visionTurn = -1.0 * targetYaw * turnP * Constants.MAX_ANGULAR_VELOCITY;
+    //     return visionTurn;
+    // }
+
+    // double photonY(){
+    //     double yP = .04;
+    //     double targetingForwardSpeed = LimelightHelpers.getTY("limelight-komodo") * yP;
+    //     targetingForwardSpeed *= -3;
+        
+    //     if(Math.abs(LimelightHelpers.getTY("limelight-komodo")) > 0.5){
+    //         return targetingForwardSpeed;
+    //     }
+    //     return 0;
+
+    // }
+
+    // double photonX(){
+    //     double xP = 0.014;
+    //     double targetingForwardSpeed = LimelightHelpers.getTX("limelight-komodo") * xP;
+    //     targetingForwardSpeed *= 1;
+    //     targetingForwardSpeed *= -3.5;
+        
+    //     if(Math.abs(LimelightHelpers.getTX("limelight-komodo")) > 0.5){
+    //         return targetingForwardSpeed;
+    //     }
+    //     return 0;
+    // }
+
+    double photonZ(){
+        double zP = 0.4;
+        double targetingZ = targetYaw *zP;
+        targetingZ *= ALIGN_TURN_CONSTANT;
+
+        
+        
+        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+        if(Math.abs(targetYaw) > 0){
+            return -targetingZ;
+        }
+        return 0;
+        
+    }
+
+    public Command AlignCommand(){
+        return Commands.run(() -> {
+          System.out.println("drive" + photonZ());
+         drive(0, 0, photonZ(),  false);
+        }, this);
+             
+         
+    }
 
 
+
+
+
+    double visionRot(){
+        double aimP = .01;
+        double targetingAngularVelocity = targetYaw *aimP;
+        targetingAngularVelocity *= 3 * Math.PI;
+        targetingAngularVelocity *= 3.5;
+        return targetingAngularVelocity;
+    }
+
+/* 
     private void detectAprilTag(CommandXboxController controller){
         boolean tv = LimelightHelpers.getTV("limelight");
 
@@ -450,13 +559,7 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
 
-    // double limelightRot(){
-    //     double aimP = .01;
-    //     double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
-    //     targetingAngularVelocity *= 3 * Math.PI;
-    //     targetingAngularVelocity *= 3.5;
-    //     return targetingAngularVelocity;
-    // }
+    
 
     double limelightX(){
         double xP = 0.014;
@@ -643,7 +746,7 @@ public class DrivetrainSubsystem implements Subsystem {
     //     }, this);
 
     // }
-
+*/
 
 
 

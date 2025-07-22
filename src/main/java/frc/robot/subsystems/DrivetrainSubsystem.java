@@ -13,6 +13,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleEntry;
@@ -44,6 +45,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
+
 
 
 
@@ -225,6 +231,16 @@ public class DrivetrainSubsystem implements Subsystem {
                     backRight.getPosition()
             },
             new Pose2d());
+        
+      
+
+            
+        // private final DriveTrainSimulationConfig driveTrainSimulationConfig = DriveTrainSimulationConfig.Default()
+        //     .withGyro(COTS.ofPigeon2())
+        //     .withSwerveModule(COTS.ofMark4(
+        //         DCMotor.getFalcon500(BACK_LEFT_DRIVE_MOTOR_ID), null, WHEEL_DIAMETER, BACK_LEFT_DRIVE_MOTOR_ID)
+                
+        // )
     }
 
 

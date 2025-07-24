@@ -51,8 +51,12 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
 
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
-
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.*;
 
 import java.time.Period;
@@ -75,6 +79,8 @@ import com.revrobotics.spark.SparkLowLevel.PeriodicFrame;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
+
+
 
 public class DrivetrainSubsystem implements Subsystem {
 
@@ -152,7 +158,20 @@ public class DrivetrainSubsystem implements Subsystem {
 
 
     
-    
+    public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
+        .withRobotMass(null)
+        .withCustomModuleTranslations(null)
+        .withGyro(COTS.ofNav2X())
+        .withSwerveModule(new SwerveModuleSimulationConfig(
+            DCMotor.getFalcon500(1), 
+            DCMotor.getFalcon500(1),
+            DRIVE_REDUCTION, 
+            STEER_REDUCTION, 
+            Volts.of(0.01), 
+            Volts.of(0.01), 
+            Inches.of(1), 
+            KilogramSquareMeters.of(0.2), 
+            (WHEEL_DIAMETER/2)));
     
 
     
@@ -232,15 +251,9 @@ public class DrivetrainSubsystem implements Subsystem {
             },
             new Pose2d());
         
-      
+    
 
             
-        // private final DriveTrainSimulationConfig driveTrainSimulationConfig = DriveTrainSimulationConfig.Default()
-        //     .withGyro(COTS.ofPigeon2())
-        //     .withSwerveModule(COTS.ofMark4(
-        //         DCMotor.getFalcon500(BACK_LEFT_DRIVE_MOTOR_ID), null, WHEEL_DIAMETER, BACK_LEFT_DRIVE_MOTOR_ID)
-                
-        // )
     }
 
 

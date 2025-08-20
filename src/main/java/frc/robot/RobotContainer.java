@@ -8,9 +8,18 @@ import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.util.BlinkinPattern;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.XboxController;
 //import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import org.littletonrobotics.junction.Logger;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,25 +27,43 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.*;
 
-import java.lang.ModuleLayer.Controller;
-
-import frc.robot.LimelightHelpers;
+import java.util.function.Consumer;
 
 
 public class RobotContainer {  
     private final Field2d field2d = new Field2d();
 
-    //Inputs Devices
+    //Inputs Devicesw
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
-    private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
+    private DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d, null);
     private final LEDSubsystem ledSubsystem = new LEDSubsystem();
-
+    private SwerveDriveSimulation driveSimulation = null;
 
     public RobotContainer() {
+
+        switch (Constants.currentMode){
+            case REAL: //running with hardware
+                System.out.println("in default mode");
+               break;
+            case SIM: //maplesim
+                driveSimulation = new SwerveDriveSimulation(drivetrainSubsystem.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+                SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
+                drivetrainSubsystem = new DrivetrainSubsystem(field2d, driveSimulation::setSimulationWorldPose);
+                break;
+            default: //replay function driver has no control
+
+                System.out.println("in default mode");
+                drivetrainSubsystem = new DrivetrainSubsystem(field2d, null);
+                break;
+        }
+
+
         configureBindings();
-        registerNamedCommands();
-        detectAprilTag(driverController);
+                registerNamedCommands();
+                detectAprilTag(driverController);
+
+       
     } 
 
     private Command xboxRumbleCommand(CommandXboxController controller, double time) {
@@ -79,7 +106,9 @@ public class RobotContainer {
        // driverLeftTrigger.whileTrue(drivetrainSubsystem.goToBranch(false));
        // driverRightTrigger.whileTrue(drivetrainSubsystem.goToBranch(true));
 
-        
+        final Runnable resetOdometry = Constants.currentMode == Constants.Mode.SIM
+            ? () -> drivetrainSubsystem.resetPose(driveSimulation.getSimulatedDriveTrainPose())
+            : () -> drivetrainSubsystem.resetPose(drivetrainSubsystem.getPose());
 
         
 
@@ -110,8 +139,24 @@ public class RobotContainer {
 
     }
 
+    public void resetSimulation() {
+        if (Constants.currentMode != Constants.Mode.SIM) return;
+
+        drivetrainSubsystem.resetPose(new Pose2d(3, 3, new Rotation2d()));
+        SimulatedArena.getInstance().resetFieldForAuto();
+    }
 
 
+    public void updateSimulation() {
+        if (Constants.currentMode != Constants.Mode.SIM) return;
+
+        SimulatedArena.getInstance().simulationPeriodic();
+        Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
+        Logger.recordOutput(
+                "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+        Logger.recordOutput(
+                "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+    }
     
 
     

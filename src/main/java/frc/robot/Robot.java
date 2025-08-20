@@ -4,13 +4,20 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.urcl.URCL;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.LogFileUtil;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.cscore.HttpCamera.HttpCameraKind;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -23,7 +30,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 * the package after creating this project, you must also update the build.gradle file in the
 * project.
 */
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot {
     private Command m_autonomousCommand;
     private RobotContainer m_robotContainer;
     
@@ -33,7 +40,7 @@ public class Robot extends TimedRobot {
     */
     @Override
     public void robotInit() {
-        
+
         // Instantiate our RobotConztainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         m_robotContainer = new RobotContainer();
@@ -41,6 +48,21 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog(), true);
         URCL.start();
+
+        switch (Constants.currentMode) {
+            case REAL:
+                Logger.addDataReceiver(new WPILOGWriter());
+                Logger.addDataReceiver(new NT4Publisher());
+                break;
+        
+            case SIM:
+                Logger.addDataReceiver(new NT4Publisher());
+                break;
+        }
+
+
+        Logger.start();
+
 
         ShuffleboardTab dashboardTab = Shuffleboard.getTab("Tab"); 
         //dashboardTab.addCamera("limelight", "limelight", "http://10.99.87.11:5800/");
@@ -55,16 +77,25 @@ public class Robot extends TimedRobot {
     */
     @Override
     public void robotPeriodic() {
+
+        Threads.setCurrentThreadPriority(true, 99);
         // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+
+        Threads.setCurrentThreadPriority(false, 10);
+        //System.out.println(Constants.currentMode);
+
+        
     }
     
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        m_robotContainer.resetSimulation();
+    }
     
     @Override
     public void disabledPeriodic() {}
@@ -119,5 +150,7 @@ public class Robot extends TimedRobot {
     
     /** This function is called periodically whilst in simulation. */
     @Override
-    public void simulationPeriodic() {}
+    public void simulationPeriodic() {
+        m_robotContainer.updateSimulation();
+    }
 }

@@ -12,6 +12,7 @@ import com.pathplanner.lib.config.PIDConstants;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotBase;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -111,4 +112,17 @@ public final class Constants {
 	public static final double LIMELIGHT_ANGLE_OFFSET = 28.3; // degrees
 	public static final double TY_ALIGN_THRESHOLD = -3;
 	public static final double ALIGN_TURN_CONSTANT = 0.24;
+
+
+	// //maplesim
+	public static final Mode simMode = Mode.SIM;
+    public static final Mode currentMode = Mode.SIM;
+
+    public static enum Mode {
+        /** Running on a real robot. */
+        REAL,
+
+        /** Running a physics simulator. */
+        SIM
+    }
 }

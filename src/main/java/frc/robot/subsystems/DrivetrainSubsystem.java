@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.hal.HAL;
+import edu.wpi.first.hal.FRCNetComm.tInstances;
+import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.math.controller.HolonomicDriveController;
@@ -55,12 +58,14 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Kilogram;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.*;
 
 import java.time.Period;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.List;
 import javax.naming.PartialResultException;
@@ -134,10 +139,10 @@ public class DrivetrainSubsystem implements Subsystem {
         )
     );
 
-    private final Translation2d frontLeftPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D); // All translations are relative to center of rotation
-    private final Translation2d frontRightPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
-    private final Translation2d backLeftPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D);
-    private final Translation2d backRightPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
+    private final static Translation2d frontLeftPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D); // All translations are relative to center of rotation
+    private final static Translation2d frontRightPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
+    private final static Translation2d backLeftPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D);
+    private final static Translation2d backRightPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
 
     private final SwerveModule frontLeft;
     private final SwerveModule frontRight;
@@ -158,20 +163,7 @@ public class DrivetrainSubsystem implements Subsystem {
 
 
     
-    public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
-        .withRobotMass(null)
-        .withCustomModuleTranslations(null)
-        .withGyro(COTS.ofNav2X())
-        .withSwerveModule(new SwerveModuleSimulationConfig(
-            DCMotor.getFalcon500(1), 
-            DCMotor.getFalcon500(1),
-            DRIVE_REDUCTION, 
-            STEER_REDUCTION, 
-            Volts.of(0.01), 
-            Volts.of(0.01), 
-            Inches.of(1), 
-            KilogramSquareMeters.of(0.2), 
-            (WHEEL_DIAMETER/2)));
+
     
 
     
@@ -185,11 +177,14 @@ public class DrivetrainSubsystem implements Subsystem {
 
     private boolean slowMode = false;
     private double rotationOffsetRadians = 0.0;
+    private final Consumer<Pose2d> resetSimulationPoseCallBack;
 
-    public DrivetrainSubsystem(Field2d field) {
+    public DrivetrainSubsystem(Field2d field, Consumer<Pose2d> resetSimPoseCallBack) {
         this.field = field;
-
+        this.resetSimulationPoseCallBack = resetSimPoseCallBack;
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+        HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
+
         
 
         // AutoBuilder.configure(
@@ -238,7 +233,7 @@ public class DrivetrainSubsystem implements Subsystem {
                 BACK_RIGHT_STEER_OFFSET,
                 drivetrainNT.getSubTable("backright"));
 
-        tab.addNumber("Rotation", () -> (getAdjustedRotation().getDegrees()));
+       // tab.addNumber("Rotation", () -> (getAdjustedRotation().getDegrees()));
 
         poseEstimator = new SwerveDrivePoseEstimator(
             kinematics,
@@ -256,6 +251,33 @@ public class DrivetrainSubsystem implements Subsystem {
             
     }
 
+    
+
+
+    //Maplesim
+    public  final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
+        .withRobotMass(Kilogram.of(74.088))
+        .withCustomModuleTranslations(getModuleTranslations())
+        .withGyro(COTS.ofPigeon2())
+        .withSwerveModule(new SwerveModuleSimulationConfig(
+            DCMotor.getFalcon500(1),
+            DCMotor.getFalcon500(1), 
+            7.363636363636365, 
+            15.42857142857143, 
+            Volts.of(0.2), 
+            Volts.of(0.2), 
+            Inches.of(2), 
+            KilogramSquareMeters.of(0.004), 
+            1.2));
+
+            public static Translation2d[] getModuleTranslations() {
+                return new Translation2d[] {
+                    frontLeftPosition,
+                    frontRightPosition,
+                    backLeftPosition,
+                    backRightPosition
+                };
+            }
 
     
 

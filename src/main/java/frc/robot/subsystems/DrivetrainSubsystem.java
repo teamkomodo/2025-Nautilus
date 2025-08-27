@@ -46,10 +46,13 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.util.FalconSwerveModule;
+import frc.robot.util.FalconSwerveModuleSim;
+import frc.robot.util.SimModuleIO;
 import frc.robot.util.SwerveModule;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
@@ -144,17 +147,17 @@ public class DrivetrainSubsystem implements Subsystem {
     private final static Translation2d backLeftPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D);
     private final static Translation2d backRightPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
 
-    private final SwerveModule frontLeft;
-    private final SwerveModule frontRight;
-    private final SwerveModule backLeft;
-    private final SwerveModule backRight;
+    private SwerveModule frontLeft;
+    private SwerveModule frontRight;
+    private SwerveModule backLeft;
+    private SwerveModule backRight;
 
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftPosition, frontRightPosition, backLeftPosition, backRightPosition);
     private final SwerveDrivePoseEstimator poseEstimator;
     private final Field2d field;
 
    
-
+    
 
     //fuckin vision ig
     public PhotonCamera camera = new PhotonCamera("J Jonah Jameson");
@@ -179,7 +182,12 @@ public class DrivetrainSubsystem implements Subsystem {
     private double rotationOffsetRadians = 0.0;
     private final Consumer<Pose2d> resetSimulationPoseCallBack;
 
-    public DrivetrainSubsystem(Field2d field, Consumer<Pose2d> resetSimPoseCallBack) {
+    public DrivetrainSubsystem(Field2d field, 
+    SwerveModule flModuleIO, 
+    SwerveModule frModuleIO,
+    SwerveModule blModuleIO,
+    SwerveModule brModuleIO, 
+    Consumer<Pose2d> resetSimPoseCallBack) {
         this.field = field;
         this.resetSimulationPoseCallBack = resetSimPoseCallBack;
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
@@ -205,33 +213,22 @@ public class DrivetrainSubsystem implements Subsystem {
             LimelightHelpers.SetFiducialIDFiltersOverride("limelight", new int[]{11,10,9,8,7,6});
         }
 
-        frontLeft = new FalconSwerveModule(
-                FRONT_LEFT_DRIVE_MOTOR_ID,
-                FRONT_LEFT_STEER_MOTOR_ID,
-                FRONT_LEFT_STEER_ENCODER_ID,
-                FRONT_LEFT_STEER_OFFSET,
-                drivetrainNT.getSubTable("frontleft"));
-        
-        frontRight = new FalconSwerveModule(
-                FRONT_RIGHT_DRIVE_MOTOR_ID,
-                FRONT_RIGHT_STEER_MOTOR_ID,
-                FRONT_RIGHT_STEER_ENCODER_ID,
-                FRONT_RIGHT_STEER_OFFSET,
-                drivetrainNT.getSubTable("frontright"));
 
-        backLeft = new FalconSwerveModule(
-                BACK_LEFT_DRIVE_MOTOR_ID,
-                BACK_LEFT_STEER_MOTOR_ID,
-                BACK_LEFT_STEER_ENCODER_ID,
-                BACK_LEFT_STEER_OFFSET,
-                drivetrainNT.getSubTable("backleft"));
+        switch (Constants.currentMode) {
+            case REAL:
+                setSwerveModulesReal();
+                break;
+            case SIM:
+                frontLeft = new FalconSwerveModule();
+                frontRight = frModuleIO;
+                backLeft = blModuleIO;
+                backRight = brModuleIO;
+            default:
+                setSwerveModulesReal();
+                break;
+        }
+
         
-        backRight = new FalconSwerveModule(
-                BACK_RIGHT_DRIVE_MOTOR_ID,
-                BACK_RIGHT_STEER_MOTOR_ID,
-                BACK_RIGHT_STEER_ENCODER_ID,
-                BACK_RIGHT_STEER_OFFSET,
-                drivetrainNT.getSubTable("backright"));
 
        // tab.addNumber("Rotation", () -> (getAdjustedRotation().getDegrees()));
 
@@ -252,7 +249,35 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
     
+    public void setSwerveModulesReal(){
+        frontLeft = new FalconSwerveModule(
+                FRONT_LEFT_DRIVE_MOTOR_ID,
+                FRONT_LEFT_STEER_MOTOR_ID,
+                FRONT_LEFT_STEER_ENCODER_ID,
+                FRONT_LEFT_STEER_OFFSET,
+            drivetrainNT.getSubTable("frontleft"));
+    
+            frontRight = new FalconSwerveModule(
+                FRONT_RIGHT_DRIVE_MOTOR_ID,
+                FRONT_RIGHT_STEER_MOTOR_ID,
+                FRONT_RIGHT_STEER_ENCODER_ID,
+                FRONT_RIGHT_STEER_OFFSET,
+            drivetrainNT.getSubTable("frontright"));
 
+            backLeft = new FalconSwerveModule(
+                BACK_LEFT_DRIVE_MOTOR_ID,
+                BACK_LEFT_STEER_MOTOR_ID,
+                BACK_LEFT_STEER_ENCODER_ID,
+                BACK_LEFT_STEER_OFFSET,
+            drivetrainNT.getSubTable("backleft"));
+    
+            backRight = new FalconSwerveModule(
+                BACK_RIGHT_DRIVE_MOTOR_ID,
+                BACK_RIGHT_STEER_MOTOR_ID,
+                BACK_RIGHT_STEER_ENCODER_ID,
+                BACK_RIGHT_STEER_OFFSET,
+            drivetrainNT.getSubTable("backright"));
+    }
 
     //Maplesim
     public  final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()

@@ -10,9 +10,11 @@ import java.util.function.BooleanSupplier;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotBase;
+//import edu.wpi.first.wpilibj.RobotBase;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -100,6 +102,9 @@ public final class Constants {
 	public static final double APRILTAG_TO_BRANCH_X_DISTANCE = 0.1551; // horizontal distance from april tag to branch in meters
 	
 	// Vision
+
+
+	//Limelight
 	public static final double LIMELIGHT_TO_APRILTAG_Y_DISTANCE = 0.6604;
 	public static final double LIMELIGHT_ROBOT_X_OFFSET = 0;
 	public static final double ROBOT_ALIGNMENT_SPEED = 1.0;
@@ -112,6 +117,10 @@ public final class Constants {
 	public static final double LIMELIGHT_ANGLE_OFFSET = 28.3; // degrees
 	public static final double TY_ALIGN_THRESHOLD = -3;
 	public static final double ALIGN_TURN_CONSTANT = 0.24;
+
+	//Photon
+	public static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
 
 
 	// //maplesim

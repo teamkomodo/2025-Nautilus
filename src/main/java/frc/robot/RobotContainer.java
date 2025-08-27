@@ -36,9 +36,9 @@ public class RobotContainer {
     //Inputs Devicesw
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
-    private DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d, null);
+    private DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d, null, null, null, null,null);
     private final LEDSubsystem ledSubsystem = new LEDSubsystem();
-    private SwerveDriveSimulation driveSimulation = null;
+    public SwerveDriveSimulation driveSimulation = null;
 
     public RobotContainer() {
 
@@ -49,7 +49,7 @@ public class RobotContainer {
             case SIM: //maplesim
                 driveSimulation = new SwerveDriveSimulation(drivetrainSubsystem.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
                 SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
-                drivetrainSubsystem = new DrivetrainSubsystem(field2d, driveSimulation::setSimulationWorldPose);
+                drivetrainSubsystem = new DrivetrainSubsystem(field2d,driveSimulation.getModules()[0], driveSimulation.getModules()[1], driveSimulation.getModules()[3], driveSimulation.getModules()[4],  driveSimulation::setSimulationWorldPose);
                 break;
             default: //replay function driver has no control
 
@@ -65,6 +65,9 @@ public class RobotContainer {
 
        
     } 
+
+
+    
 
     private Command xboxRumbleCommand(CommandXboxController controller, double time) {
             return Commands.runEnd(() -> {

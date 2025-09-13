@@ -143,6 +143,8 @@ public class DrivetrainSubsystem implements Subsystem {
     public PhotonCamera camera = new PhotonCamera("J Jonah Jameson");
     public boolean targetVisible = false;
     public double targetYaw;
+    public double targetPitch;
+    public double targetSkew;
 
 
     
@@ -289,8 +291,10 @@ public class DrivetrainSubsystem implements Subsystem {
             if(result.hasTargets()){
                // System.out.println("found target");
                 for(var target : result.getTargets()){
-                    if(target.getFiducialId() == 1){
+                    if(target.getFiducialId() == 9){
                         targetYaw = target.getYaw();
+                        targetPitch = target.getPitch();
+                        targetSkew = target.getSkew();
                         System.out.println("TargetYaw: " + targetYaw);
                         targetVisible = true;
                     }
@@ -498,24 +502,55 @@ public class DrivetrainSubsystem implements Subsystem {
     // }
 
     double photonZ(){
-        double zP = 0.4;
+        double zP = 1;
         double targetingZ = targetYaw *zP;
-        targetingZ *= ALIGN_TURN_CONSTANT;
+        targetingZ *= 0.1;
 
         
         
         //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
         if(Math.abs(targetYaw) > 0){
-            return -targetingZ;
+            return targetingZ;
         }
         return 0;
         
     }
 
+    double photonX(){
+        double xP = 1;
+        double targetingX = targetYaw *xP;
+        targetingX *= 0.1;
+
+        
+        
+        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+        if(Math.abs(targetPitch) > 0){
+            return targetingX;
+        }
+        return 0;
+        
+    }
+
+    double photonSkew(){
+        double sP = 1;
+        double targetingS= targetPitch *sP;
+        targetingS *= 0.1;
+
+        
+        
+        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+        if(Math.abs(targetSkew) > 0){
+            return targetingS;
+        }
+        return 0;
+        
+    }
+    
+
     public Command AlignCommand(){
         return Commands.run(() -> {
           System.out.println("drive" + photonZ());
-         drive(0, 0, photonZ(),  false);
+         drive(photonX(), 0, photonZ(),  false);
         }, this);
              
          

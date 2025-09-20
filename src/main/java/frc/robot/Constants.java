@@ -10,6 +10,7 @@ import java.util.function.BooleanSupplier;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -105,10 +106,22 @@ public final class Constants {
 	public static final double ALIGN_LINEAR_SPEED_FACTOR = 1.1;
 	public static final double ALIGN_EXPONENTIAL_SPEED_FACTOR = 0.9;
 
+
+
+	//Camera
 	public static final double APRILTAG_HEIGHT = 0.5715;
 	public static final double LIMELIGHT_ROBOT_Y_OFFSET = -0.0254;
-	public static final double LIMELIGHT_HEIGHT = 0.1778;
+	public static final double CAMERA_HEIGHT = 0.1778;
 	public static final double LIMELIGHT_ANGLE_OFFSET = 28.3; // degrees
 	public static final double TY_ALIGN_THRESHOLD = -3;
 	public static final double ALIGN_TURN_CONSTANT = 0.24;
+	public static final double CAMERA_PITCH = Units.degreesToRadians(20);
+	
+
 }
+
+
+
+
+
+	

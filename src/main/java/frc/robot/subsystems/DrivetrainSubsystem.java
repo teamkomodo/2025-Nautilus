@@ -7,7 +7,9 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -33,6 +35,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.simulation.PWMSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -47,6 +50,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 
 
+
 import static frc.robot.Constants.*;
 
 import java.time.Period;
@@ -56,6 +60,10 @@ import java.util.List;
 import javax.naming.PartialResultException;
 
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonUtils;
+import org.photonvision.estimation.TargetModel;
+import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import com.kauailabs.navx.frc.AHRS;
@@ -69,8 +77,11 @@ import com.revrobotics.spark.SparkLowLevel.PeriodicFrame;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.Sim.DrivetrainSim;
 
 public class DrivetrainSubsystem implements Subsystem {
+
+    
 
     Counter counter = new Counter(Counter.Mode.kPulseLength);
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
@@ -143,8 +154,17 @@ public class DrivetrainSubsystem implements Subsystem {
     public PhotonCamera camera = new PhotonCamera("J Jonah Jameson");
     public boolean targetVisible = false;
     public double targetYaw;
-    public double targetPitch;
+    public double targetX;
     public double targetSkew;
+
+    private final double visionTurnP = 0.01;
+    private final double desiredAngle = 0.0;
+    private final double strafeP = 0.1;
+    private final double range = 0;
+    
+    
+    
+
 
 
     
@@ -244,6 +264,9 @@ public class DrivetrainSubsystem implements Subsystem {
         //System.out.println(calculateAlignDistance(false));
         updateTelemetry();
 
+       // System.out.println("Drive x: " + photonX());
+       // System.out.println("Drive y: " + photonZ());
+
         // if(limelightX() == 0){
         //     System.out.println("AAAAAA");
         // }
@@ -280,6 +303,8 @@ public class DrivetrainSubsystem implements Subsystem {
         robotPosePublisher.set(getPose());
     }
 
+
+    
     private void visionPosePeriodic() {
         
         var results = camera.getAllUnreadResults();
@@ -293,9 +318,15 @@ public class DrivetrainSubsystem implements Subsystem {
                 for(var target : result.getTargets()){
                     if(target.getFiducialId() == 9){
                         targetYaw = target.getYaw();
-                        targetPitch = target.getPitch();
-                        targetSkew = target.getSkew();
-                        System.out.println("TargetYaw: " + targetYaw);
+                        
+                        targetX = PhotonUtils.calculateDistanceToTargetMeters(
+                            0.5,
+                            1.435,
+                            CAMERA_PITCH,
+                            target.getYaw() * (Math.PI / 180)
+                        );
+
+
                         targetVisible = true;
                     }
                 }
@@ -471,6 +502,19 @@ public class DrivetrainSubsystem implements Subsystem {
     // vision
     
 
+
+    public Command potatoCommand(){//partner approved
+        return Commands.run(
+           () -> {Align();} , this);
+    }
+
+
+    public void Align(){
+        double turn = (desiredAngle - targetYaw) * visionTurnP * MAX_ANGULAR_ACCEL;
+        double forward = (range - targetX) * strafeP * MAX_ANGULAR_ACCEL;
+        drive(-forward, 0, 0, false);
+        System.out.println(turn);
+    }
     // double aimAtTarget(){
     //     double turnP = 0.0;
     //     double visionTurn = -1.0 * targetYaw * turnP * Constants.MAX_ANGULAR_VELOCITY;
@@ -501,72 +545,72 @@ public class DrivetrainSubsystem implements Subsystem {
     //     return 0;
     // }
 
-    double photonZ(){
-        double zP = 1;
-        double targetingZ = targetYaw *zP;
-        targetingZ *= 0.1;
+    // double photonZ(){
+    //     double zP = 1;
+    //     double targetingZ = targetYaw *zP;
+    //     targetingZ *= 0.1;
 
         
         
-        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(targetYaw) > 0){
-            return targetingZ;
-        }
-        return 0;
+    //     //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+    //     if(Math.abs(targetYaw) > 0){
+    //         return targetingZ;
+    //     }
+    //     return 0;
         
-    }
+    // }
 
-    double photonX(){
-        double xP = 1;
-        double targetingX = targetYaw *xP;
-        targetingX *= 0.1;
-
-        
-        
-        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(targetPitch) > 0){
-            return targetingX;
-        }
-        return 0;
-        
-    }
-
-    double photonSkew(){
-        double sP = 1;
-        double targetingS= targetPitch *sP;
-        targetingS *= 0.1;
+    // double photonX(){
+    //     double xP = 0.8;
+    //     double targetingX = targetYaw *xP;
+    //     targetingX *= 0.5;
 
         
         
-        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(targetSkew) > 0){
-            return targetingS;
-        }
-        return 0;
+    //     //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+    //    // if(Math.abs(targetPitch) > 0){
+    //         return targetingX;
+    //     // }
+    //     // return 0;
         
-    }
+    // }
+
+    // double photonSkew(){
+    //     double sP = 1;
+    //     double targetingS= targetPitch *sP;
+    //     targetingS *= 0.1;
+
+        
+        
+    //     //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
+    //     if(Math.abs(targetSkew) > 0){
+    //         return targetingS;
+    //     }
+    //     return 0;
+        
+    // }
     
 
-    public Command AlignCommand(){
-        return Commands.run(() -> {
-          System.out.println("drive" + photonZ());
-         drive(photonX(), 0, photonZ(),  false);
-        }, this);
+    // public Command AlignCommand(){
+    //     return Commands.run(() -> {
+    //       System.out.println("drive" + photonX());
+    //      drive(photonX(), 0, 0,  false);
+    //     }, this);
              
          
-    }
+    // }
 
 
 
 
 
-    double visionRot(){
-        double aimP = .01;
-        double targetingAngularVelocity = targetYaw *aimP;
-        targetingAngularVelocity *= 3 * Math.PI;
-        targetingAngularVelocity *= 3.5;
-        return targetingAngularVelocity;
-    }
+    // double visionRot(){
+    //     double aimP = .01;
+    //     double targetingAngularVelocity = targetYaw *aimP;
+    //     targetingAngularVelocity *= 3 * Math.PI;
+    //     targetingAngularVelocity *= 3.5;
+    //     return targetingAngularVelocity;
+    // }
 
 /* 
     private void detectAprilTag(CommandXboxController controller){

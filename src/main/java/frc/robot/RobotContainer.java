@@ -87,7 +87,7 @@ public class RobotContainer {
         driverYButton.whileTrue(xboxRumbleCommand(driverController, 10));
 
         Trigger driverXButton = driverController.x();
-        driverXButton.whileTrue(drivetrainSubsystem.AlignCommand());
+        driverXButton.whileTrue(drivetrainSubsystem.potatoCommand());
 
         
 

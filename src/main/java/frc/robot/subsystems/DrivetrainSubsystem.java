@@ -10,7 +10,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -156,11 +158,12 @@ public class DrivetrainSubsystem implements Subsystem {
     public double targetYaw;
     public double targetX;
     public double targetSkew;
+    public Transform3d visionPose;
 
     private final double visionTurnP = 0.01;
     private final double desiredAngle = 0.0;
     private final double strafeP = 0.1;
-    private final double range = 0;
+    private final double range = 0.5;
     
     
     
@@ -325,6 +328,8 @@ public class DrivetrainSubsystem implements Subsystem {
                             CAMERA_PITCH,
                             target.getYaw() * (Math.PI / 180)
                         );
+
+                        visionPose = target.getBestCameraToTarget();
 
 
                         targetVisible = true;
@@ -512,8 +517,11 @@ public class DrivetrainSubsystem implements Subsystem {
     public void Align(){
         double turn = (desiredAngle - targetYaw) * visionTurnP * MAX_ANGULAR_ACCEL;
         double forward = (range - targetX) * strafeP * MAX_ANGULAR_ACCEL;
-        drive(-forward, 0, 0, false);
+        drive(-forward, 0, -turn, false);
         System.out.println(turn);
+
+        
+
     }
     // double aimAtTarget(){
     //     double turnP = 0.0;

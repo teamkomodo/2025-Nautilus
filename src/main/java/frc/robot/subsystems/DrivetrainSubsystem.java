@@ -319,9 +319,11 @@ public class DrivetrainSubsystem implements Subsystem {
             if(result.hasTargets()){
                // System.out.println("found target");
                 for(var target : result.getTargets()){
+                    
                     if(target.getFiducialId() == 9){
                         targetYaw = target.getYaw();
-                        
+                        visionPose = target.getBestCameraToTarget();
+                       // System.out.println(visionPose.getX());
                         targetX = PhotonUtils.calculateDistanceToTargetMeters(
                             0.5,
                             1.435,
@@ -329,12 +331,16 @@ public class DrivetrainSubsystem implements Subsystem {
                             target.getYaw() * (Math.PI / 180)
                         );
 
-                        visionPose = target.getBestCameraToTarget();
-
+                       // visionPose = target.getAlternateCameraToTarget();
+                        
 
                         targetVisible = true;
                     }
                 }
+            } else {
+                visionPose = null;
+                targetYaw = 0.0;
+                targetX = 0;
             }
         }
     }
@@ -506,6 +512,13 @@ public class DrivetrainSubsystem implements Subsystem {
  
     // vision
     
+    public double VisionX(){
+        double Vx = visionPose.getX();
+        double xP = 0.1;
+        //double
+
+        return 0.0;
+    }
 
 
     public Command potatoCommand(){//partner approved
@@ -516,9 +529,11 @@ public class DrivetrainSubsystem implements Subsystem {
 
     public void Align(){
         double turn = (desiredAngle - targetYaw) * visionTurnP * MAX_ANGULAR_ACCEL;
-        double forward = (range - targetX) * strafeP * MAX_ANGULAR_ACCEL;
-        drive(-forward, 0, -turn, false);
-        System.out.println(turn);
+        //double forward = (range - targetX) * strafeP * MAX_ANGULAR_ACCEL;
+        double X = visionPose.getX() * strafeP * MAX_ANGULAR_ACCEL;
+        double Y = visionPose.getY() * strafeP * MAX_ANGULAR_ACCEL;
+        drive(X, Y, -turn, false);
+        System.out.println(visionPose.getX());
 
         
 
